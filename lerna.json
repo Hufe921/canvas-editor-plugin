@@ -1,0 +1,18 @@
+{
+  "packages": [
+    "packages/*"
+  ],
+  "version": "0.0.1",
+  "npmClient": "yarn",
+  "command": {
+    "ignoreChanges": [
+      "*.md",
+      "example/**"
+    ]
+  },
+  "bootstrap": {
+    "npmClientArgs": [
+      "--no-package-lock"
+    ]
+  }
+}

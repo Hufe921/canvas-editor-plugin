@@ -1,0 +1,50 @@
+{
+  "private": true,
+  "name": "canvas-editor-plugin",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "plugins for canvas-editor",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "homepage": "https://github.com/Hufe921/canvas-editor-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "plugin"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "clean": "lerna clean --yes && rm -rf ./packages/**/package-lock.json",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "dev": "lerna run dev",
+    "type:check": "lerna run type:check",
+    "lint": "eslint \"packages/*/src/**/*.ts\"",
+    "prerelease": "yarn build",
+    "release:publish": "lerna publish from-git --yes",
+    "release:package": "lerna publish from-package --yes",
+    "postinstall": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@types/node": "^18.12.1",
+    "@typescript-eslint/eslint-plugin": "5.61.0",
+    "@typescript-eslint/parser": "5.61.0",
+    "eslint": "8.44.0",
+    "lerna": "^7.1.1",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run lint && npm run type:check",
+    "commit-msg": "node scripts/verifyCommit.js"
+  }
+}
