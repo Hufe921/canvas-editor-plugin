@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-barcode1d",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "barcode1d plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
