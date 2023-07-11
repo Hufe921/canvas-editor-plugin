@@ -3,7 +3,7 @@
     "packages/*"
   ],
   "version": "0.0.1",
-  "npmClient": "yarn",
+  "npmClient": "pnpm",
   "command": {
     "ignoreChanges": [
       "*.md",

@@ -23,19 +23,20 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "lerna clean --yes && rm -rf ./packages/**/package-lock.json",
+    "clean": "lerna clean --yes && rm -rf node_modules",
+    "clean:dist": "rm -rf ./packages/**/dist",
     "build": "lerna run build",
     "test": "lerna run test",
     "dev": "lerna run dev",
     "type:check": "lerna run type:check",
     "lint": "eslint \"packages/*/src/**/*.ts\"",
-    "prerelease": "yarn build",
-    "release:publish": "lerna publish from-git --yes",
-    "release:package": "lerna publish from-package --yes",
+    "prerelease": "pnpm build",
+    "release:publish": "lerna publish from-git",
+    "release:package": "lerna publish from-package",
     "postinstall": "simple-git-hooks"
   },
   "devDependencies": {
-    "@types/node": "^18.12.1",
+    "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "5.61.0",
     "@typescript-eslint/parser": "5.61.0",
     "eslint": "8.44.0",
