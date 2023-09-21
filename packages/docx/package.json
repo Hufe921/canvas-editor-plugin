@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-docx",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "docx plugin for canvas-editor",
   "type": "module",
   "publishConfig": {

@@ -4,7 +4,8 @@ import {
   Command,
   IElement,
   ElementType,
-  TitleLevel
+  TitleLevel,
+  ListStyle
 } from '@hufe921/canvas-editor'
 import {
   Document,
@@ -48,10 +49,12 @@ function convertElementToParagraphChild(element: IElement): ParagraphChild {
   }
   if (element.type === ElementType.HYPERLINK) {
     return new ExternalHyperlink({
-      children:
-        element.valueList?.map(child =>
-          convertElementToParagraphChild(child)
-        ) || [],
+      children: [
+        new TextRun({
+          text: element.valueList?.map(child => child.value).join(''),
+          style: 'Hyperlink'
+        })
+      ],
       link: element.url!
     })
   }
@@ -112,14 +115,28 @@ function convertElementListToDocxChildren(
       )
     } else if (element.type === ElementType.LIST) {
       appendParagraph()
-      children.push(
-        new Paragraph({
-          children:
-            element.valueList?.map(child =>
-              convertElementToParagraphChild(child)
-            ) || []
-        })
-      )
+      // 拆分列表
+      const listChildren =
+        element.valueList
+          ?.map(item => item.value)
+          .join('')
+          .split('\n')
+          .map(
+            (text, index) =>
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${
+                      !element.listStyle ||
+                      element.listStyle === ListStyle.DECIMAL
+                        ? `${index + 1}. `
+                        : `• `
+                    }${text}`
+                  })
+                ]
+              })
+          ) || []
+      children.push(...listChildren)
     } else if (element.type === ElementType.TABLE) {
       appendParagraph()
       const { trList } = element
@@ -147,8 +164,8 @@ function convertElementListToDocxChildren(
         new Table({
           rows: tableRowList,
           width: {
-            size: element.width!,
-            type: WidthType.AUTO
+            size: '100%',
+            type: WidthType.PERCENTAGE
           }
         })
       )
