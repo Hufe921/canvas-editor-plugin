@@ -1,4 +1,4 @@
-import { Editor, Command, ElementType } from '@hufe921/canvas-editor'
+import { Editor, ElementType } from '@hufe921/canvas-editor'
 import { BrowserQRCodeReader, BrowserQRCodeSvgWriter } from '@zxing/browser'
 import { EncodeHintType } from '@zxing/library'
 
@@ -8,13 +8,15 @@ function convertSvgElementToBase64(svgElement: HTMLElement | SVGSVGElement) {
   )}`
 }
 
-export type CommandWithBarcode2D = Command & {
-  executeInsertBarcode2D(
-    content: string,
-    width: number,
-    height: number,
-    hints?: Map<EncodeHintType, any>
-  ): void
+declare module '@hufe921/canvas-editor' {
+  interface Command {
+    executeInsertBarcode2D(
+      content: string,
+      width: number,
+      height: number,
+      hints?: Map<EncodeHintType, any>
+    ): void
+  }
 }
 
 export interface IBarcode2DOption {
@@ -25,7 +27,7 @@ export default function barcode2DPlugin(
   editor: Editor,
   options: IBarcode2DOption = {}
 ) {
-  const command = <CommandWithBarcode2D>editor.command
+  const command = editor.command
 
   // 插入二维码
   command.executeInsertBarcode2D = (

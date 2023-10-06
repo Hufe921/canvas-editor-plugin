@@ -1,5 +1,5 @@
 import Editor from '@hufe921/canvas-editor'
-import barcode2DPlugin, { CommandWithBarcode2D } from './barcode2d'
+import barcode2DPlugin from './barcode2d'
 
 window.onload = function () {
   const container = document.querySelector<HTMLDivElement>('#editor')!
@@ -9,7 +9,7 @@ window.onload = function () {
   instance.use(barcode2DPlugin, {
     isRegisterDetectorContextMenu: true
   })
-  const command = <CommandWithBarcode2D>instance.command
+  const command = instance.command
 
   document.querySelector('button')!.onclick = () => {
     command.executeInsertBarcode2D('https://hufe.club/canvas-editor', 200, 200)
