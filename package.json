@@ -3,7 +3,7 @@
   "name": "canvas-editor-plugin",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "plugins for canvas-editor",
   "type": "module",
   "publishConfig": {

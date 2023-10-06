@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-codeblock",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "codeblock plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
