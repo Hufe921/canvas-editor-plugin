@@ -36,7 +36,7 @@
     "@hufe921/canvas-editor": ">=0.9.37"
   },
   "devDependencies": {
-    "@hufe921/canvas-editor": "0.9.37",
+    "@hufe921/canvas-editor": ">=0.9.50",
     "@rollup/plugin-typescript": "^10.0.1",
     "@types/color": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "4.33.0",
