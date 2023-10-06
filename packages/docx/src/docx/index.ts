@@ -1,7 +1,6 @@
 import Color from 'color'
 import {
   Editor,
-  Command,
   IElement,
   ElementType,
   TitleLevel,
@@ -191,12 +190,14 @@ export interface IExportDocxOption {
   fileName: string
 }
 
-export type CommandWithDocx = Command & {
-  executeExportDocx(options: IExportDocxOption): void
+declare module '@hufe921/canvas-editor' {
+  interface Command {
+    executeExportDocx(options: IExportDocxOption): void
+  }
 }
 
 export default function docxPlugin(editor: Editor) {
-  const command = <CommandWithDocx>editor.command
+  const command = editor.command
 
   // 导出文档
   command.executeExportDocx = (options: IExportDocxOption) => {
