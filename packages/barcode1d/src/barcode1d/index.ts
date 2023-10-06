@@ -1,4 +1,4 @@
-import { Editor, Command, ElementType } from '@hufe921/canvas-editor'
+import { Editor, ElementType } from '@hufe921/canvas-editor'
 import JsBarcode from 'jsbarcode'
 
 function convertSvgElementToBase64(svgElement: HTMLElement | SVGSVGElement) {
@@ -7,17 +7,19 @@ function convertSvgElementToBase64(svgElement: HTMLElement | SVGSVGElement) {
   )}`
 }
 
-export type CommandWithBarcode1D = Command & {
-  executeInsertBarcode1D(
-    content: string,
-    width: number,
-    height: number,
-    options?: JsBarcode.Options
-  ): void
+declare module '@hufe921/canvas-editor' {
+  interface Command {
+    executeInsertBarcode1D(
+      content: string,
+      width: number,
+      height: number,
+      options?: JsBarcode.Options
+    ): void
+  }
 }
 
 export default function barcodePlugin(editor: Editor) {
-  const command = <CommandWithBarcode1D>editor.command
+  const command = editor.command
 
   // 条形码
   command.executeInsertBarcode1D = (
