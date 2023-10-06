@@ -1,5 +1,5 @@
 import Editor from '@hufe921/canvas-editor'
-import codeblockPlugin, { CommandWithCodeblock } from './codeblock'
+import codeblockPlugin from './codeblock'
 
 window.onload = function () {
   const container = document.querySelector<HTMLDivElement>('#editor')!
@@ -7,7 +7,7 @@ window.onload = function () {
     main: []
   })
   instance.use(codeblockPlugin)
-  const command = <CommandWithCodeblock>instance.command
+  const command = instance.command
 
   document.querySelector('button')!.onclick = () => {
     command.executeInsertCodeblock('console.log("canvas-editor")')

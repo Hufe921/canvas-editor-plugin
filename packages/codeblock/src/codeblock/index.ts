@@ -1,13 +1,15 @@
-import { Editor, Command, IElement } from '@hufe921/canvas-editor'
+import { Editor, IElement } from '@hufe921/canvas-editor'
 import prism from 'prismjs'
 import { formatPrismToken } from './prism'
 
-export type CommandWithCodeblock = Command & {
-  executeInsertCodeblock(content: string): void
+declare module '@hufe921/canvas-editor' {
+  interface Command {
+    executeInsertCodeblock(content: string): void
+  }
 }
 
 export default function barcodePlugin(editor: Editor) {
-  const command = <CommandWithCodeblock>editor.command
+  const command = editor.command
   // 代码块
   command.executeInsertCodeblock = (content: string) => {
     if (!content) return
