@@ -74,7 +74,8 @@ function toggleToolbarItemActive(toolbarItem: HTMLDivElement, active: boolean) {
 export default function floatingToolbarPlugin(editor: Editor) {
   // 创建工具栏
   const toolbarContainer = createToolbar(editor)
-  document.body.append(toolbarContainer)
+  const editorContainer = editor.command.getContainer()
+  editorContainer.append(toolbarContainer)
 
   // 监听选区样式变化
   editor.eventBus.on('rangeStyleChange', rangeStyle => {

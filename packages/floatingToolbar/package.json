@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-floating-toolbar",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "floating toolbar plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
@@ -33,10 +33,10 @@
     "type:check": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@hufe921/canvas-editor": ">=0.9.51"
+    "@hufe921/canvas-editor": ">=0.9.52"
   },
   "devDependencies": {
-    "@hufe921/canvas-editor": "0.9.51",
+    "@hufe921/canvas-editor": "0.9.52",
     "@rollup/plugin-typescript": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "4.33.0",
     "@typescript-eslint/parser": "4.33.0",

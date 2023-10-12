@@ -169,8 +169,8 @@ importers:
   packages/floatingToolbar:
     devDependencies:
       '@hufe921/canvas-editor':
-        specifier: 0.9.51
-        version: 0.9.51
+        specifier: 0.9.52
+        version: 0.9.52
       '@rollup/plugin-typescript':
         specifier: ^10.0.1
         version: 10.0.1(typescript@5.0.2)
@@ -492,8 +492,8 @@ packages:
       prismjs: 1.29.0
     dev: true
 
-  /@hufe921/canvas-editor@0.9.51:
-    resolution: {integrity: sha512-actg7bCLfdtAYtUhkmSIlMtxqtHq/nXrXi5tAdAKgZPTSE+8lAjVx5Q/E1mg+6ee/yG6rUde/ddma+2Kj8BSGg==}
+  /@hufe921/canvas-editor@0.9.52:
+    resolution: {integrity: sha512-WPJIN1Lu7XG2IXkqNUeH0pVizPAn8X4W9ne6mCokz8RD2x85r9NG/YFA3os3lP469QjDe6rvO5ot7GbltgNIkg==}
     engines: {node: '>=12.0.0'}
     dev: true
 
