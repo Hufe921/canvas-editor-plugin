@@ -15,6 +15,10 @@ import docxPlugin from '@hufe921/canvas-editor-plugin-docx'
 const instance = new Editor()
 instance.use(docxPlugin)
 
+command.executeImportDocx({
+  arrayBuffer: buffer
+})
+
 instance.executeExportDocx({
   fileName: string
 })
