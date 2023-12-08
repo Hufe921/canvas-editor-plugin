@@ -9,7 +9,29 @@ window.onload = function () {
   instance.use(docxPlugin)
   const command = instance.command
 
-  document.querySelector('button')!.onclick = () => {
+  const fileInput = document.querySelector<HTMLInputElement>('#file-docx')!
+
+  document.querySelector<HTMLButtonElement>('#import-docx')!.onclick = () => {
+    fileInput.click()
+  }
+
+  fileInput.onchange = () => {
+    const file = fileInput?.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = event => {
+      const buffer = event?.target?.result
+      if (buffer instanceof ArrayBuffer) {
+        command.executeImportDocx({
+          arrayBuffer: buffer
+        })
+      }
+      fileInput.value = ''
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  document.querySelector<HTMLButtonElement>('#export-docx')!.onclick = () => {
     command.executeExportDocx({
       fileName: 'canvas-editor'
     })
