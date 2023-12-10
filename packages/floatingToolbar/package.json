@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-floating-toolbar",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "floating toolbar plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
