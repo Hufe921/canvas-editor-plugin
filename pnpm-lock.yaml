@@ -199,8 +199,8 @@ importers:
   packages/floatingToolbar:
     devDependencies:
       '@hufe921/canvas-editor':
-        specifier: 0.9.52
-        version: 0.9.52
+        specifier: 0.9.58
+        version: 0.9.58
       '@rollup/plugin-typescript':
         specifier: ^10.0.1
         version: 10.0.1(typescript@5.0.2)
@@ -527,8 +527,8 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: true
 
-  /@hufe921/canvas-editor@0.9.52:
-    resolution: {integrity: sha512-WPJIN1Lu7XG2IXkqNUeH0pVizPAn8X4W9ne6mCokz8RD2x85r9NG/YFA3os3lP469QjDe6rvO5ot7GbltgNIkg==}
+  /@hufe921/canvas-editor@0.9.58:
+    resolution: {integrity: sha512-Wra5bSuV6H3ejLRkbZAdoN8jSqNyqKVzQbD00vl9NKjcAYUGJ4QXMYh8m3UnVlz5P29VwPfZ2an0AyQTRHo7+g==}
     engines: {node: '>=12.0.0'}
     dev: true
 

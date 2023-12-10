@@ -84,7 +84,7 @@ export default function floatingToolbarPlugin(editor: Editor) {
       return
     }
     const context = editor.command.getRangeContext()
-    if (!context || !context.rangeRects[0]) {
+    if (!context || context.isCollapsed || !context.rangeRects[0]) {
       toggleToolbarVisible(toolbarContainer, false)
       return
     }
