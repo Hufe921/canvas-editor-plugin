@@ -1,9 +1,9 @@
 {
-  "name": "@hufe921/canvas-editor-plugin-docx",
+  "name": "@hufe921/canvas-editor-plugin-floating-toolbar",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.5",
-  "description": "docx plugin for canvas-editor",
+  "version": "0.0.3",
+  "description": "floating toolbar plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -15,16 +15,16 @@
     "LICENSE",
     "package.json"
   ],
-  "typings": "./dist/src/docx/index.d.ts",
-  "main": "./dist/docx.umd.cjs",
-  "module": "./dist/docx.js",
+  "typings": "./dist/src/floatingToolbar/index.d.ts",
+  "main": "./dist/floatingToolbar.umd.cjs",
+  "module": "./dist/floatingToolbar.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
   },
   "keywords": [
     "canvas-editor",
-    "docx"
+    "floatingToolbar"
   ],
   "scripts": {
     "dev": "vite",
@@ -33,22 +33,18 @@
     "type:check": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@hufe921/canvas-editor": ">=0.9.42"
+    "@hufe921/canvas-editor": ">=0.9.58"
   },
   "devDependencies": {
-    "@hufe921/canvas-editor": ">=0.9.50",
+    "@hufe921/canvas-editor": "0.9.58",
     "@rollup/plugin-typescript": "^10.0.1",
-    "@types/color": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "4.33.0",
     "@typescript-eslint/parser": "4.33.0",
     "eslint": "7.32.0",
+    "sass": "^1.69.2",
     "simple-git-hooks": "^2.8.1",
     "typescript": "^5.0.2",
-    "vite": "^4.3.9"
-  },
-  "dependencies": {
-    "color": "^4.2.3",
-    "docx": "^8.2.2",
-    "mammoth": "^1.6.0"
+    "vite": "^4.3.9",
+    "vite-plugin-css-injected-by-js": "^3.3.0"
   }
 }
