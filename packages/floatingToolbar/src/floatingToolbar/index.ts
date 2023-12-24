@@ -1,8 +1,65 @@
+import '@simonwep/pickr/dist/themes/nano.min.css'
+import Pickr from '@simonwep/pickr'
 import Editor from '@hufe921/canvas-editor'
 import './style/index.scss'
 import { ToolbarType } from './enum'
 import { IToolbarRegister } from './interface'
 import { PLUGIN_PREFIX } from './constant'
+
+function createPickerToolbar(
+  container: HTMLDivElement,
+  toolbarType: ToolbarType,
+  changed: (color: string) => void
+) {
+  const toolbarItem = document.createElement('div')
+  toolbarItem.classList.add(`${PLUGIN_PREFIX}-picker`)
+  toolbarItem.classList.add(`${PLUGIN_PREFIX}-${toolbarType}`)
+  // 颜色选择容器
+  const pickerContainer = document.createElement('div')
+  pickerContainer.classList.add(`${PLUGIN_PREFIX}-picker-container`)
+  const pickerDom = document.createElement('div')
+  pickerContainer.append(pickerDom)
+  toolbarItem.append(pickerContainer)
+  container.append(toolbarItem)
+  // 实例化颜色选择器
+  const currentColor = '#000000'
+  const pickr = new Pickr({
+    el: pickerDom,
+    theme: 'nano',
+    useAsButton: true,
+    inline: true,
+    default: currentColor,
+    i18n: {
+      'btn:save': '✓'
+    },
+    components: {
+      preview: true,
+      opacity: true,
+      hue: true,
+      interaction: {
+        input: true,
+        save: true
+      }
+    }
+  })
+  const icon = document.createElement('i')
+  toolbarItem.append(icon)
+  const colorBar = document.createElement('span')
+  colorBar.style.backgroundColor = currentColor
+  toolbarItem.append(colorBar)
+  toolbarItem.onclick = evt => {
+    const target = evt.target as HTMLElement
+    if (pickerContainer !== target && !pickerContainer.contains(target)) {
+      pickr.show()
+    }
+  }
+  pickr.on('save', (cb: any) => {
+    pickr.hide()
+    const color = cb.toHEXA().toString()
+    colorBar.style.backgroundColor = color
+    changed(color)
+  })
+}
 
 // 工具栏列表
 const toolbarRegisterList: IToolbarRegister[] = [
@@ -17,6 +74,9 @@ const toolbarRegisterList: IToolbarRegister[] = [
     callback(editor) {
       editor.command.executeSizeMinus()
     }
+  },
+  {
+    isDivider: true
   },
   {
     key: ToolbarType.BOLD,
@@ -41,6 +101,23 @@ const toolbarRegisterList: IToolbarRegister[] = [
     callback(editor) {
       editor.command.executeStrikeout()
     }
+  },
+  {
+    isDivider: true
+  },
+  {
+    render(container, editor) {
+      createPickerToolbar(container, ToolbarType.COLOR, color => {
+        editor.command.executeColor(color)
+      })
+    }
+  },
+  {
+    render(container, editor) {
+      createPickerToolbar(container, ToolbarType.HIGHLIGHT, color => {
+        editor.command.executeHighlight(color)
+      })
+    }
   }
 ]
 
@@ -48,15 +125,23 @@ function createToolbar(editor: Editor): HTMLDivElement {
   const toolbarContainer = document.createElement('div')
   toolbarContainer.classList.add(`${PLUGIN_PREFIX}-floating-toolbar`)
   for (const toolbar of toolbarRegisterList) {
-    const { key, callback } = toolbar
-    const toolbarItem = document.createElement('div')
-    toolbarItem.classList.add(`${PLUGIN_PREFIX}-${key}`)
-    const icon = document.createElement('i')
-    toolbarItem.append(icon)
-    toolbarItem.onclick = () => {
-      callback(editor)
+    if (toolbar.render) {
+      toolbar.render(toolbarContainer, editor)
+    } else if (toolbar.isDivider) {
+      const divider = document.createElement('div')
+      divider.classList.add(`${PLUGIN_PREFIX}-divider`)
+      toolbarContainer.append(divider)
+    } else {
+      const { key, callback } = toolbar
+      const toolbarItem = document.createElement('div')
+      toolbarItem.classList.add(`${PLUGIN_PREFIX}-${key}`)
+      const icon = document.createElement('i')
+      toolbarItem.append(icon)
+      toolbarItem.onclick = () => {
+        callback?.(editor)
+      }
+      toolbarContainer.append(toolbarItem)
     }
-    toolbarContainer.append(toolbarItem)
   }
   return toolbarContainer
 }

@@ -34,6 +34,16 @@
       display: inline-block;
     }
 
+    &.ce-divider {
+      padding: 0;
+      min-width: unset;
+      width: 1px;
+      height: 16px;
+      margin: 0 3px;
+      display: inline-block;
+      background-color: #cfd2d8;
+    }
+
     &.ce-size-add i {
       background: url(../icons/size-add.svg);
     }
@@ -56,6 +66,35 @@
 
     &.ce-strikeout i {
       background: url(../icons/strikeout.svg);
+    }
+
+    &.ce-picker {
+      height: 20px;
+      display: flex;
+      flex-direction: column;
+
+      >span {
+        width: 16px;
+        height: 3px;
+        display: inline-block;
+        border: 1px solid #e2e6ed;
+      }
+
+      .ce-picker-container {
+        position: relative;
+
+        .pcr-app {
+          position: absolute !important;
+        }
+      }
+    }
+
+    &.ce-color i {
+      background: url(../icons/color.svg);
+    }
+
+    &.ce-highlight i {
+      background: url(../icons/highlight.svg);
     }
   }
 }

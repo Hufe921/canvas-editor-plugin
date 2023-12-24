@@ -197,6 +197,10 @@ importers:
         version: 4.3.9(@types/node@18.11.9)(sass@1.69.2)
 
   packages/floatingToolbar:
+    dependencies:
+      '@simonwep/pickr':
+        specifier: ^1.9.0
+        version: 1.9.0
     devDependencies:
       '@hufe921/canvas-editor':
         specifier: 0.9.58
@@ -1009,6 +1013,13 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@simonwep/pickr@1.9.0:
+    resolution: {integrity: sha512-oEYvv15PyfZzjoAzvXYt3UyNGwzsrpFxLaZKzkOSd0WYBVwLd19iJerePDONxC1iF6+DpcswPdLIM2KzCJuYFg==}
+    dependencies:
+      core-js: 3.32.2
+      nanopop: 2.3.0
+    dev: false
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -1963,6 +1974,11 @@ packages:
       git-semver-tags: 5.0.1
       meow: 8.1.2
     dev: true
+
+  /core-js@3.32.2:
+    resolution: {integrity: sha512-pxXSw1mYZPDGvTQqEc5vgIb83jGQKFGYWY76z4a7weZXUolw3G+OvpZqSRcfYOoOVUQJYEPsWeQK8pKEnUtWxQ==}
+    requiresBuild: true
+    dev: false
 
   /core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -3831,6 +3847,10 @@ packages:
     resolution: {integrity: sha512-7ZtY5KTCNheRGfEFxnedV5zFiORN1+Y1N6zvPTnHQd8ENUvfaDBeuJDZb2bN/oXwXxu3qkTXDzy57W5vAmDTBw==}
     engines: {node: ^14 || ^16 || >=18}
     hasBin: true
+    dev: false
+
+  /nanopop@2.3.0:
+    resolution: {integrity: sha512-fzN+T2K7/Ah25XU02MJkPZ5q4Tj5FpjmIYq4rvoHX4yb16HzFdCO6JxFFn5Y/oBhQ8no8fUZavnyIv9/+xkBBw==}
     dev: false
 
   /natural-compare-lite@1.4.0:

@@ -4,5 +4,7 @@ export enum ToolbarType {
   BOLD = 'bold',
   ITALIC = 'italic',
   UNDERLINE = 'underline',
-  STRIKEOUT = 'strikeout'
+  STRIKEOUT = 'strikeout',
+  COLOR = 'color',
+  HIGHLIGHT = 'highlight'
 }
