@@ -1,0 +1,52 @@
+{
+  "name": "@hufe921/canvas-editor-plugin-excel",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "excel plugin for canvas-editor",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "typings": "./dist/src/excel/index.d.ts",
+  "main": "./dist/excel.umd.cjs",
+  "module": "./dist/excel.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "excel"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode lib",
+    "release": "node scripts/release.js",
+    "type:check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hufe921/canvas-editor": ">=0.9.86"
+  },
+  "devDependencies": {
+    "@hufe921/canvas-editor": "0.9.86",
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@types/color": "^3.0.4",
+    "@typescript-eslint/eslint-plugin": "4.33.0",
+    "@typescript-eslint/parser": "4.33.0",
+    "eslint": "7.32.0",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
