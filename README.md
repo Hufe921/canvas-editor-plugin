@@ -68,6 +68,20 @@ instance.executeExportDocx({
 })
 ```
 
+- @hufe921/canvas-editor-plugin-excel
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import excelPlugin from '@hufe921/canvas-editor-plugin-excel'
+
+const instance = new Editor()
+instance.use(excelPlugin)
+
+command.executeImportExcel({
+  arrayBuffer: buffer
+})
+```
+
 - @hufe921/canvas-editor-plugin-floating-toolbar
 
 ```javascript
