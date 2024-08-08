@@ -91,3 +91,19 @@ import floatingToolbarPlugin from '@hufe921/canvas-editor-plugin-floating-toolba
 const instance = new Editor()
 instance.use(floatingToolbarPlugin)
 ```
+
+- @hufe921/canvas-editor-plugin-diagram
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import diagramPlugin from '@hufe921/canvas-editor-plugin-diagram'
+
+const instance = new Editor()
+instance.use(diagramPlugin)
+
+command.executeLoadDiagram({
+  lang?: Lang
+  data?: string
+  onDestroy?: (message?: any) => void
+})
+```
