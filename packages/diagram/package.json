@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-diagram",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "diagram plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
@@ -44,6 +44,7 @@
     "eslint": "7.32.0",
     "simple-git-hooks": "^2.8.1",
     "typescript": "^5.0.2",
-    "vite": "^4.3.9"
+    "vite": "^4.3.9",
+    "vite-plugin-css-injected-by-js": "^3.3.0"
   }
 }
