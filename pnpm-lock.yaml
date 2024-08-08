@@ -156,6 +156,36 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.9)(sass@1.69.2)
 
+  packages/diagram:
+    devDependencies:
+      '@hufe921/canvas-editor':
+        specifier: 0.9.88
+        version: 0.9.88
+      '@rollup/plugin-typescript':
+        specifier: ^10.0.1
+        version: 10.0.1(typescript@5.0.2)
+      '@types/color':
+        specifier: ^3.0.4
+        version: 3.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: 4.33.0
+        version: 4.33.0(@typescript-eslint/parser@4.33.0)(eslint@7.32.0)(typescript@5.0.2)
+      '@typescript-eslint/parser':
+        specifier: 4.33.0
+        version: 4.33.0(eslint@7.32.0)(typescript@5.0.2)
+      eslint:
+        specifier: 7.32.0
+        version: 7.32.0
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: 2.8.1
+      typescript:
+        specifier: ^5.0.2
+        version: 5.0.2
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.9)(sass@1.69.2)
+
   packages/docx:
     dependencies:
       color:
@@ -595,6 +625,11 @@ packages:
 
   /@hufe921/canvas-editor@0.9.86:
     resolution: {integrity: sha512-Zb4YgtxcdtSzXo1cFmk6n0zFiDWcsjntcUSx3yibVHxfGPIKd3RIhrddyGY7g9a4mUZutzZHq/979ubDoy0Ygw==}
+    engines: {node: '>=16.9.1'}
+    dev: true
+
+  /@hufe921/canvas-editor@0.9.88:
+    resolution: {integrity: sha512-IIjefk0fj0R0v5T16tjNWuwFdCT6O5GsgR+vw/Xp4fxyHu7rA5SbvpdQJ3hapOCBQaTmJd8Vhe4i7RBcVDnpVA==}
     engines: {node: '>=16.9.1'}
     dev: true
 
