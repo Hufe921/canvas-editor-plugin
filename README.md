@@ -107,3 +107,17 @@ command.executeLoadDiagram({
   onDestroy?: (message?: any) => void
 })
 ```
+
+- @hufe921/canvas-editor-plugin-case
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import casePlugin from '@hufe921/canvas-editor-plugin-case'
+
+const instance = new Editor()
+instance.use(casePlugin)
+
+command.executeUpperCase()
+
+command.executeLowerCase()
+```
