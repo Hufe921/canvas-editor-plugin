@@ -4,7 +4,8 @@ import {
   ElementType,
   TitleLevel,
   ListStyle,
-  Command
+  Command,
+  IEditorData
 } from '@hufe921/canvas-editor'
 import {
   Document,
@@ -35,6 +36,10 @@ const titleLevelToHeadingLevel = {
   [TitleLevel.FIFTH]: HeadingLevel.HEADING_5,
   [TitleLevel.SIXTH]: HeadingLevel.HEADING_6
 }
+
+type IPx2ptHandler = (size?: number) => number
+
+let px2ptHandler: IPx2ptHandler = (size?: number): number => (size || 16) / 0.75
 
 function convertElementToParagraphChild(element: IElement): ParagraphChild {
   if (element.type === ElementType.IMAGE) {
@@ -69,7 +74,7 @@ function convertElementToParagraphChild(element: IElement): ParagraphChild {
     font: element.font,
     text: element.value,
     bold: element.bold,
-    size: `${(element.size || 16) / 0.75}pt`,
+    size: `${px2ptHandler(element.size)}pt`,
     color: Color(element.color).hex() || '#000000',
     italics: element.italic,
     strike: element.strikeout,
@@ -196,31 +201,38 @@ declare module '@hufe921/canvas-editor' {
   }
 }
 
+export function createDocumentByData(data: IEditorData) {
+  const { header, main, footer } = data
+  return new Document({
+    sections: [
+      {
+        headers: {
+          default: new Header({
+            children: convertElementListToDocxChildren(header || [])
+          })
+        },
+        footers: {
+          default: new Footer({
+            children: convertElementListToDocxChildren(footer || [])
+          })
+        },
+        children: convertElementListToDocxChildren(main || [])
+      }
+    ]
+  })
+}
+
+export function setPx2PtHandler(handler: IPx2ptHandler) {
+  if (typeof handler === 'function') {
+    px2ptHandler = handler
+  }
+}
+
 export default function (command: Command) {
   return function (options: IExportDocxOption) {
     const { fileName } = options
-    const {
-      data: { header, main, footer }
-    } = command.getValue()
-
-    const doc = new Document({
-      sections: [
-        {
-          headers: {
-            default: new Header({
-              children: convertElementListToDocxChildren(header || [])
-            })
-          },
-          footers: {
-            default: new Footer({
-              children: convertElementListToDocxChildren(footer || [])
-            })
-          },
-          children: convertElementListToDocxChildren(main || [])
-        }
-      ]
-    })
-
+    const { data } = command.getValue()
+    const doc = createDocumentByData(data)
     Packer.toBlob(doc).then(blob => {
       saveAs(blob, `${fileName}.docx`)
     })
