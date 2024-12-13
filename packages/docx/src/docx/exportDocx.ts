@@ -119,6 +119,7 @@ function convertElementListToDocxChildren(
         element.valueList
           ?.map(item => item.value)
           .join('')
+          .replace(/^\n/, '')
           .split('\n')
           .map(
             (text, index) =>
@@ -175,11 +176,16 @@ function convertElementListToDocxChildren(
         ) || [])
       )
     } else {
+      let suffixBreak
       if (/^\n/.test(element.value)) {
         appendParagraph()
         element.value = element.value.replace(/^\n/, '')
+      } else if (/\n$/.test(element.value)) {
+        suffixBreak = true
+        element.value = element.value.replace(/\n$/, '')
       }
       paragraphChild.push(convertElementToParagraphChild(element))
+      suffixBreak && appendParagraph()
     }
   }
   appendParagraph()
