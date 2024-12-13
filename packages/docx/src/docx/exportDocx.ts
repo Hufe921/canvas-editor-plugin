@@ -119,6 +119,7 @@ function convertElementListToDocxChildren(
         element.valueList
           ?.map(item => item.value)
           .join('')
+          .replace(/^\n/, '')
           .split('\n')
           .map(
             (text, index) =>
@@ -179,7 +180,12 @@ function convertElementListToDocxChildren(
         appendParagraph()
         element.value = element.value.replace(/^\n/, '')
       }
+      const suffixBreak = /\n$/.test(element.value)
+      if (suffixBreak) {
+        element.value = element.value.replace(/\n$/, '')
+      }
       paragraphChild.push(convertElementToParagraphChild(element))
+      suffixBreak && appendParagraph()
     }
   }
   appendParagraph()
