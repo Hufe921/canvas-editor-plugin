@@ -4,7 +4,8 @@ import {
   ElementType,
   TitleLevel,
   ListStyle,
-  Command
+  Command,
+  RowFlex
 } from '@hufe921/canvas-editor'
 import {
   Document,
@@ -22,7 +23,8 @@ import {
   WidthType,
   TableRow,
   TableCell,
-  MathRun
+  MathRun,
+  AlignmentType
 } from 'docx'
 import { saveAs } from './utils'
 
@@ -34,6 +36,14 @@ const titleLevelToHeadingLevel = {
   [TitleLevel.FOURTH]: HeadingLevel.HEADING_4,
   [TitleLevel.FIFTH]: HeadingLevel.HEADING_5,
   [TitleLevel.SIXTH]: HeadingLevel.HEADING_6
+}
+
+// 水平对齐映射
+const RowFlexToAlignmentType = {
+  [RowFlex.LEFT]: AlignmentType.LEFT,
+  [RowFlex.CENTER]: AlignmentType.CENTER,
+  [RowFlex.RIGHT]: AlignmentType.RIGHT,
+  [RowFlex.ALIGNMENT]: AlignmentType.BOTH
 }
 
 function convertElementToParagraphChild(element: IElement): ParagraphChild {
@@ -88,14 +98,18 @@ function convertElementListToDocxChildren(
 
   let paragraphChild: ParagraphChild[] = []
 
+  let alignment: AlignmentType | undefined = undefined
+
   function appendParagraph() {
     if (paragraphChild.length) {
       children.push(
         new Paragraph({
+          alignment,
           children: paragraphChild
         })
       )
       paragraphChild = []
+      alignment = undefined
     }
   }
 
@@ -103,40 +117,45 @@ function convertElementListToDocxChildren(
     const element = elementList[e]
     if (element.type === ElementType.TITLE) {
       appendParagraph()
+      const valueList = element.valueList || []
+      const rowFlex = valueList[0]?.rowFlex
       children.push(
         new Paragraph({
           heading: titleLevelToHeadingLevel[element.level!],
-          children:
-            element.valueList?.map(child =>
-              convertElementToParagraphChild(child)
-            ) || []
+          alignment: rowFlex ? RowFlexToAlignmentType[rowFlex] : undefined,
+          children: valueList.map(child =>
+            convertElementToParagraphChild(child)
+          )
         })
       )
     } else if (element.type === ElementType.LIST) {
       appendParagraph()
       // 拆分列表
-      const listChildren =
-        element.valueList
-          ?.map(item => item.value)
-          .join('')
-          .replace(/^\n/, '')
-          .split('\n')
-          .map(
-            (text, index) =>
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `${
-                      !element.listStyle ||
-                      element.listStyle === ListStyle.DECIMAL
-                        ? `${index + 1}. `
-                        : `• `
-                    }${text}`
-                  })
-                ]
-              })
-          ) || []
-      children.push(...listChildren)
+      const valueList = element.valueList || []
+      const isDecimal =
+        !element.listStyle || element.listStyle === ListStyle.DECIMAL
+      valueList.reduce((count, cur) => {
+        if (cur.value !== '\n') {
+          cur.value
+            .replace(/^\n/, '')
+            .split('\n')
+            .forEach(text => {
+              children.push(
+                new Paragraph({
+                  alignment: cur.rowFlex
+                    ? RowFlexToAlignmentType[cur.rowFlex]
+                    : undefined,
+                  children: [
+                    new TextRun({
+                      text: `${isDecimal ? `${++count}. ` : `• `}${text}`
+                    })
+                  ]
+                })
+              )
+            })
+        }
+        return count
+      }, 0)
     } else if (element.type === ElementType.TABLE) {
       appendParagraph()
       const { trList } = element
@@ -170,10 +189,13 @@ function convertElementListToDocxChildren(
         })
       )
     } else if (element.type === ElementType.DATE) {
+      const valueList = element.valueList || []
+      const rowFlex = valueList[0]?.rowFlex
+      if (rowFlex && !alignment) {
+        alignment = RowFlexToAlignmentType[rowFlex]
+      }
       paragraphChild.push(
-        ...(element.valueList?.map(child =>
-          convertElementToParagraphChild(child)
-        ) || [])
+        ...valueList.map(child => convertElementToParagraphChild(child))
       )
     } else {
       let suffixBreak
@@ -183,6 +205,9 @@ function convertElementListToDocxChildren(
       } else if (/\n$/.test(element.value)) {
         suffixBreak = true
         element.value = element.value.replace(/\n$/, '')
+      }
+      if (element.rowFlex && !alignment) {
+        alignment = RowFlexToAlignmentType[element.rowFlex]
       }
       paragraphChild.push(convertElementToParagraphChild(element))
       suffixBreak && appendParagraph()
