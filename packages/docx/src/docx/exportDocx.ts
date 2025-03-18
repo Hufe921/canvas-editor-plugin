@@ -203,19 +203,29 @@ function convertElementListToDocxChildren(
         ...valueList.map(child => convertElementToParagraphChild(child))
       )
     } else {
-      let suffixBreak
-      if (/^\n/.test(element.value)) {
-        appendParagraph()
-        element.value = element.value.replace(/^\n/, '')
-      } else if (/\n$/.test(element.value)) {
-        suffixBreak = true
-        element.value = element.value.replace(/\n$/, '')
+      if (/\n/.test(element.value)) {
+        let valueList = element.value.split('\n')
+        // \n\n...
+        if (valueList.every(value => value === '')) {
+          valueList = valueList.slice(1)
+        }
+        valueList.forEach(value => {
+          if (value !== '') {
+            if (element.rowFlex && !alignment) {
+              alignment = RowFlexToAlignmentType[element.rowFlex]
+            }
+            paragraphChild.push(
+              convertElementToParagraphChild({ ...element, value })
+            )
+          }
+          appendParagraph()
+        })
+      } else {
+        if (element.rowFlex && !alignment) {
+          alignment = RowFlexToAlignmentType[element.rowFlex]
+        }
+        paragraphChild.push(convertElementToParagraphChild(element))
       }
-      if (element.rowFlex && !alignment) {
-        alignment = RowFlexToAlignmentType[element.rowFlex]
-      }
-      paragraphChild.push(convertElementToParagraphChild(element))
-      suffixBreak && appendParagraph()
     }
   }
   appendParagraph()
