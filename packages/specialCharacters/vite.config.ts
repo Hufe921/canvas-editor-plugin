@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import typescript from '@rollup/plugin-typescript'
+import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 import * as path from 'path'
 
 export default defineConfig(({ mode }) => {
@@ -7,6 +8,10 @@ export default defineConfig(({ mode }) => {
   if (mode === 'lib') {
     return {
       plugins: [
+        cssInjectedByJsPlugin({
+          styleId: `${name}-style`,
+          topExecutionPriority: true
+        }),
         {
           ...typescript({
             tsconfig: './tsconfig.json',
