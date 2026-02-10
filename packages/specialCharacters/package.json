@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-special-characters",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "special characters plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
