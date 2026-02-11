@@ -1,0 +1,175 @@
+.menstrual-history-dialog-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .5;
+  background: #000000;
+  z-index: 99;
+}
+
+.menstrual-history-dialog-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menstrual-history-dialog {
+  width: 480px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px 0 rgb(56 56 56 / 20%);
+  border: 1px solid #e2e6ed;
+  border-radius: 4px;
+}
+
+.menstrual-history-dialog-title {
+  position: relative;
+  height: 48px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+}
+
+.menstrual-history-dialog-title-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2329;
+}
+
+.menstrual-history-dialog-title-close {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  display: inline-block;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>') no-repeat center;
+  background-size: contain;
+}
+
+.menstrual-history-dialog-title-close:hover {
+  opacity: 0.7;
+}
+
+.menstrual-history-dialog-main {
+  padding: 40px 30px;
+}
+
+/* 水平布局 - 中间分数区域高度是两边的2倍 */
+.menstrual-history-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 左右输入框 */
+.menstrual-history-input {
+  width: 130px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 14px;
+  color: #1f2329;
+  text-align: center;
+  border: 1px solid #d0d3d6;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.menstrual-history-input:focus {
+  border-color: #1e80ff;
+}
+
+.menstrual-history-input::placeholder {
+  color: #8f959e;
+  font-size: 12px;
+}
+
+/* 分数容器 - 高度是输入框的2倍(72px) */
+.menstrual-history-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  gap: 6px;
+}
+
+/* 分数输入框 - 带边框和两边一致 */
+.menstrual-history-fraction input {
+  width: 80px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 14px;
+  color: #1f2329;
+  text-align: center;
+  border: 1px solid #d0d3d6;
+  border-radius: 4px;
+  outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.menstrual-history-fraction input:focus {
+  border-color: #1e80ff;
+}
+
+.menstrual-history-fraction input::placeholder {
+  color: #8f959e;
+  font-size: 12px;
+}
+
+/* 分数横线 */
+.menstrual-history-fraction-line {
+  width: 80px;
+  height: 2px;
+  background: #1f2329;
+}
+
+.menstrual-history-dialog-footer {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e2e6ed;
+}
+
+.menstrual-history-dialog-btn {
+  height: 28px;
+  padding: 0 16px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.menstrual-history-dialog-btn-cancel {
+  background: #ffffff;
+  color: #1f2329;
+  border-color: #d0d3d6;
+}
+
+.menstrual-history-dialog-btn-cancel:hover {
+  border-color: #1e80ff;
+  color: #1e80ff;
+}
+
+.menstrual-history-dialog-btn-confirm {
+  background: #1e80ff;
+  color: #ffffff;
+}
+
+.menstrual-history-dialog-btn-confirm:hover {
+  background: #1170ee;
+}

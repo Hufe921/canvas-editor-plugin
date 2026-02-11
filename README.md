@@ -121,3 +121,34 @@ command.executeUpperCase()
 
 command.executeLowerCase()
 ```
+
+- @hufe921/canvas-editor-plugin-special-characters
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import specialCharactersPlugin from '@hufe921/canvas-editor-plugin-special-characters'
+
+const instance = new Editor()
+instance.use(specialCharactersPlugin)
+
+command.executeOpenSpecialCharactersDialog({
+  characters?: ICharacterCategory[],
+  onSelect?: (char: string) => void
+})
+```
+
+- @hufe921/canvas-editor-plugin-menstrual-history
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import menstrualHistoryPlugin from '@hufe921/canvas-editor-plugin-menstrual-history'
+
+const instance = new Editor()
+instance.use(menstrualHistoryPlugin)
+
+command.executeLoadMenstrualHistory({
+  data?: IMenstrualHistoryData,
+  onConfirm?: (data: IMenstrualHistoryData & { svg: string; width: number; height: number }) => void,
+  onCancel?: () => void
+})
+```

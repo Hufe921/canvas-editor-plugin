@@ -1,0 +1,50 @@
+{
+  "name": "@hufe921/canvas-editor-plugin-menstrual-history",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "menstrual history plugin for canvas-editor",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "typings": "./dist/src/menstrualHistory/index.d.ts",
+  "main": "./dist/menstrualHistory.umd.cjs",
+  "module": "./dist/menstrualHistory.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "menstrual-history",
+    "medical-formula"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode lib",
+    "release": "node scripts/release.js",
+    "type:check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hufe921/canvas-editor": ">=0.9.88"
+  },
+  "devDependencies": {
+    "@hufe921/canvas-editor": "0.9.88",
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "4.33.0",
+    "@typescript-eslint/parser": "4.33.0",
+    "eslint": "7.32.0",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9",
+    "vite-plugin-css-injected-by-js": "^3.3.0"
+  }
+}

@@ -19,7 +19,11 @@
       "Bash(git stash*)",
       "Bash(ls*)",
       "Bash(cat *)",
-      "Bash(pwd)"
+      "Bash(pwd)",
+      "Bash(xargs:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build)",
+      "Bash(curl:*)"
     ],
     "deny": [
       "Bash(git push*)",
