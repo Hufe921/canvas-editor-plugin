@@ -33,7 +33,10 @@
     "prerelease": "pnpm build",
     "release:publish": "lerna publish from-git",
     "release:package": "lerna publish from-package",
-    "postinstall": "simple-git-hooks"
+    "postinstall": "simple-git-hooks",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
@@ -42,7 +45,8 @@
     "eslint": "8.44.0",
     "lerna": "^7.1.1",
     "simple-git-hooks": "^2.8.1",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.2",
+    "vitepress": "^1.6.4"
   },
   "simple-git-hooks": {
     "pre-commit": "npm run lint",
