@@ -3,8 +3,16 @@ import Pickr from '@simonwep/pickr'
 import Editor from '@hufe921/canvas-editor'
 import './style/index.scss'
 import { ToolbarType } from './enum'
-import { IToolbarRegister } from './interface'
+import { IFloatingToolbarOptions, IToolbarRegister } from './interface'
 import { PLUGIN_PREFIX } from './constant'
+
+interface IRangeStyle {
+  type: string | null
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  strikeout: boolean
+}
 
 function createPickerToolbar(
   container: HTMLDivElement,
@@ -61,16 +69,18 @@ function createPickerToolbar(
   })
 }
 
-// 工具栏列表
-const toolbarRegisterList: IToolbarRegister[] = [
+// 默认工具栏列表
+const defaultToolbarRegisterList: IToolbarRegister[] = [
   {
     key: ToolbarType.SIZE_ADD,
+    title: '增大字号',
     callback(editor) {
       editor.command.executeSizeAdd()
     }
   },
   {
     key: ToolbarType.SIZE_MINUS,
+    title: '减小字号',
     callback(editor) {
       editor.command.executeSizeMinus()
     }
@@ -80,24 +90,28 @@ const toolbarRegisterList: IToolbarRegister[] = [
   },
   {
     key: ToolbarType.BOLD,
+    title: '粗体',
     callback(editor) {
       editor.command.executeBold()
     }
   },
   {
     key: ToolbarType.ITALIC,
+    title: '斜体',
     callback(editor) {
       editor.command.executeItalic()
     }
   },
   {
     key: ToolbarType.UNDERLINE,
+    title: '下划线',
     callback(editor) {
       editor.command.executeUnderline()
     }
   },
   {
     key: ToolbarType.STRIKEOUT,
+    title: '删除线',
     callback(editor) {
       editor.command.executeStrikeout()
     }
@@ -106,6 +120,8 @@ const toolbarRegisterList: IToolbarRegister[] = [
     isDivider: true
   },
   {
+    key: ToolbarType.COLOR,
+    title: '文字颜色',
     render(container, editor) {
       createPickerToolbar(container, ToolbarType.COLOR, color => {
         editor.command.executeColor(color)
@@ -113,6 +129,8 @@ const toolbarRegisterList: IToolbarRegister[] = [
     }
   },
   {
+    key: ToolbarType.HIGHLIGHT,
+    title: '高亮颜色',
     render(container, editor) {
       createPickerToolbar(container, ToolbarType.HIGHLIGHT, color => {
         editor.command.executeHighlight(color)
@@ -121,10 +139,43 @@ const toolbarRegisterList: IToolbarRegister[] = [
   }
 ]
 
-function createToolbar(editor: Editor): HTMLDivElement {
+function createToolbar(
+  editor: Editor,
+  options?: IFloatingToolbarOptions
+): HTMLDivElement {
   const toolbarContainer = document.createElement('div')
   toolbarContainer.classList.add(`${PLUGIN_PREFIX}-floating-toolbar`)
-  for (const toolbar of toolbarRegisterList) {
+
+  let toolbarItems: IToolbarRegister[] = []
+
+  // 决定是否显示默认工具栏
+  if (!options || options.showDefaultItems !== false) {
+    toolbarItems = [...defaultToolbarRegisterList]
+  }
+
+  // 添加自定义工具栏项
+  if (options?.customItems?.length) {
+    const customRegisterItems: IToolbarRegister[] = options.customItems.map(
+      item => {
+        // 处理分隔符情况
+        if (item.isDivider) {
+          return { isDivider: true }
+        }
+
+        return {
+          key: item.key,
+          title: item.title,
+          icon: item.icon,
+          callback: item.callback
+        }
+      }
+    )
+
+    toolbarItems = [...toolbarItems, ...customRegisterItems]
+  }
+
+  // 创建工具栏项
+  for (const toolbar of toolbarItems) {
     if (toolbar.render) {
       toolbar.render(toolbarContainer, editor)
     } else if (toolbar.isDivider) {
@@ -132,17 +183,35 @@ function createToolbar(editor: Editor): HTMLDivElement {
       divider.classList.add(`${PLUGIN_PREFIX}-divider`)
       toolbarContainer.append(divider)
     } else {
-      const { key, callback } = toolbar
-      const toolbarItem = document.createElement('div')
-      toolbarItem.classList.add(`${PLUGIN_PREFIX}-${key}`)
-      const icon = document.createElement('i')
-      toolbarItem.append(icon)
-      toolbarItem.onclick = () => {
-        callback?.(editor)
+      const { key, callback, title, icon } = toolbar
+
+      if (key && callback) {
+        const toolbarItem = document.createElement('div')
+        toolbarItem.classList.add(`${PLUGIN_PREFIX}-${key}`)
+
+        if (title) {
+          toolbarItem.setAttribute('title', title)
+        }
+
+        const iconElement = document.createElement('i')
+        if (icon) {
+          if (icon.startsWith('.') || icon.startsWith('#')) {
+            iconElement.className = icon.substring(1)
+          } else {
+            iconElement.textContent = icon
+          }
+        }
+
+        toolbarItem.append(iconElement)
+        toolbarItem.onclick = () => {
+          callback(editor)
+        }
+
+        toolbarContainer.append(toolbarItem)
       }
-      toolbarContainer.append(toolbarItem)
     }
   }
+
   return toolbarContainer
 }
 
@@ -156,14 +225,17 @@ function toggleToolbarItemActive(toolbarItem: HTMLDivElement, active: boolean) {
     : toolbarItem.classList.remove('active')
 }
 
-export default function floatingToolbarPlugin(editor: Editor) {
+export default function floatingToolbarPlugin(
+  editor: Editor,
+  options?: IFloatingToolbarOptions
+) {
   // 创建工具栏
-  const toolbarContainer = createToolbar(editor)
+  const toolbarContainer = createToolbar(editor, options)
   const editorContainer = editor.command.getContainer()
   editorContainer.append(toolbarContainer)
 
   // 监听选区样式变化
-  editor.eventBus.on('rangeStyleChange', rangeStyle => {
+  editor.eventBus.on('rangeStyleChange', (rangeStyle: IRangeStyle) => {
     if (rangeStyle.type === null) {
       toggleToolbarVisible(toolbarContainer, false)
       return
