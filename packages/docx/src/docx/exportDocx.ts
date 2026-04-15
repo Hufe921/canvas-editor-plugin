@@ -36,6 +36,8 @@ import {
 } from 'docx'
 import { saveAs } from './utils'
 
+type LineRuleValue = (typeof LineRuleType)[keyof typeof LineRuleType]
+
 // 标题映射
 const titleLevelToHeadingLevel = {
   [TitleLevel.FIRST]: HeadingLevel.HEADING_1,
@@ -52,7 +54,8 @@ function pxToTwip(px: number): number {
 }
 
 // 段落对齐映射
-function getParagraphAlignment(rowFlex?: RowFlex): AlignmentType | undefined {
+type DocxAlignment = (typeof AlignmentType)[keyof typeof AlignmentType]
+function getParagraphAlignment(rowFlex?: RowFlex): DocxAlignment | undefined {
   switch (rowFlex) {
     case RowFlex.LEFT:
       return AlignmentType.LEFT
@@ -68,7 +71,11 @@ function getParagraphAlignment(rowFlex?: RowFlex): AlignmentType | undefined {
 }
 
 // 单元格垂直对齐映射
-function getCellVerticalAlign(align?: VerticalAlign): DocxVerticalAlign | undefined {
+type DocxCellVerticalAlign =
+  (typeof DocxVerticalAlign)[keyof typeof DocxVerticalAlign]
+function getCellVerticalAlign(
+  align?: VerticalAlign
+): DocxCellVerticalAlign | undefined {
   switch (align) {
     case VerticalAlign.TOP:
       return DocxVerticalAlign.TOP
@@ -118,10 +125,24 @@ function getTableBorders(borderType?: TableBorder) {
   }
 }
 
+function inferImageType(data: string): 'png' | 'jpg' | 'gif' | 'bmp' {
+  const match = data.match(/^data:image\/(png|jpg|jpeg|gif|bmp);base64,/i)
+  if (match) {
+    const ext = match[1].toLowerCase()
+    return ext === 'jpeg' ? 'jpg' : (ext as 'png' | 'jpg' | 'gif' | 'bmp')
+  }
+  return 'png'
+}
+
+function stripBase64Prefix(data: string): string {
+  return data.replace(/^data:image\/[^;]+;base64,/, '')
+}
+
 function convertElementToParagraphChild(element: IElement): ParagraphChild {
   if (element.type === ElementType.IMAGE) {
     return new ImageRun({
-      data: element.value,
+      type: inferImageType(element.value),
+      data: stripBase64Prefix(element.value),
       transformation: {
         width: element.width!,
         height: element.height!
@@ -163,7 +184,9 @@ function convertElementToParagraphChild(element: IElement): ParagraphChild {
     color: Color(element.color).hex() || '#000000',
     italics: element.italic,
     strike: element.strikeout,
-    highlight: element.highlight ? Color(element.highlight).hex() : undefined,
+    shading: element.highlight
+      ? { fill: Color(element.highlight).hex() }
+      : undefined,
     superScript: element.type === ElementType.SUPERSCRIPT,
     subScript: element.type === ElementType.SUBSCRIPT,
     underline: element.underline ? {} : undefined
@@ -177,21 +200,45 @@ function convertElementListToDocxChildren(
   const children: DocxChildren = []
 
   let paragraphChild: ParagraphChild[] = []
+  let paragraphAlignment: DocxAlignment | undefined
+  let paragraphSpacing: { line: number; lineRule: LineRuleValue } | undefined
 
   function appendParagraph() {
     if (paragraphChild.length) {
       children.push(
         new Paragraph({
+          alignment: paragraphAlignment,
+          spacing: paragraphSpacing,
           children: paragraphChild
         })
       )
       paragraphChild = []
+      paragraphAlignment = undefined
+      paragraphSpacing = undefined
     }
   }
 
   for (let e = 0; e < elementList.length; e++) {
     const element = elementList[e]
     if (element.type === ElementType.TITLE) {
+      const prevElement = e > 0 ? elementList[e - 1] : undefined
+      if (
+        prevElement &&
+        (!prevElement.value || /\n$/.test(prevElement.value)) &&
+        paragraphChild.length
+      ) {
+        prevElement.value = prevElement.value.replace(/\n$/, '')
+        if (prevElement.value) {
+          paragraphChild[paragraphChild.length - 1] =
+            convertElementToParagraphChild(prevElement)
+        } else if (paragraphChild.length === 1) {
+          paragraphChild = []
+          paragraphAlignment = undefined
+          paragraphSpacing = undefined
+        } else {
+          paragraphChild = paragraphChild.slice(0, -1) as ParagraphChild[]
+        }
+      }
       appendParagraph()
       children.push(
         new Paragraph({
@@ -214,12 +261,16 @@ function convertElementListToDocxChildren(
           ?.map(item => item.value)
           .join('')
           .split('\n')
+          .filter((text, i) => i !== 0 || text !== '')
           .map(
             (text, index) =>
               new Paragraph({
                 alignment: getParagraphAlignment(element.rowFlex),
                 spacing: element.rowMargin
-                  ? { line: pxToTwip(element.rowMargin), lineRule: LineRuleType.AUTO }
+                  ? {
+                      line: pxToTwip(element.rowMargin),
+                      lineRule: LineRuleType.AUTO
+                    }
                   : undefined,
                 children: [
                   new TextRun({
@@ -280,6 +331,24 @@ function convertElementListToDocxChildren(
           borders: getTableBorders(borderType)
         })
       )
+    } else if (element.type === ElementType.SEPARATOR) {
+      appendParagraph()
+      children.push(
+        new Paragraph({
+          border: {
+            bottom: {
+              color: element.color || '#000000',
+              space: 1,
+              style: element.dashArray?.length
+                ? BorderStyle.DASHED
+                : BorderStyle.SINGLE,
+              size: 6
+            }
+          },
+          spacing: { after: 0, before: 0 },
+          children: []
+        })
+      )
     } else if (element.type === ElementType.DATE) {
       paragraphChild.push(
         ...(element.valueList?.map(child =>
@@ -291,18 +360,21 @@ function convertElementListToDocxChildren(
         appendParagraph()
         element.value = element.value.replace(/^\n/, '')
       }
+      if (paragraphChild.length === 0) {
+        paragraphAlignment = getParagraphAlignment(element.rowFlex)
+        paragraphSpacing = element.rowMargin
+          ? { line: pxToTwip(element.rowMargin), lineRule: LineRuleType.AUTO }
+          : undefined
+      }
       paragraphChild.push(convertElementToParagraphChild(element))
     }
   }
-  // 将末尾未闭合的普通段落按照最后一个元素的对齐/行距属性创建（若存在）
+  // 将末尾未闭合的普通段落使用已记录的对齐/行距属性创建
   if (paragraphChild.length) {
-    const lastElement = elementList[elementList.length - 1]
     children.push(
       new Paragraph({
-        alignment: getParagraphAlignment(lastElement?.rowFlex),
-        spacing: lastElement?.rowMargin
-          ? { line: pxToTwip(lastElement.rowMargin), lineRule: LineRuleType.AUTO }
-          : undefined,
+        alignment: paragraphAlignment,
+        spacing: paragraphSpacing,
         children: paragraphChild
       })
     )
