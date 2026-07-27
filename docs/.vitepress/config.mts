@@ -39,6 +39,7 @@ export default defineConfig({
                 { text: '条形码 2D', link: '/plugins/barcode2d' },
                 { text: '代码块', link: '/plugins/codeblock' },
                 { text: 'DOCX 导入导出', link: '/plugins/docx' },
+                { text: 'PDF 导出', link: '/plugins/pdf' },
                 { text: 'Excel 导入', link: '/plugins/excel' },
                 { text: '浮动工具栏', link: '/plugins/floating-toolbar' },
                 { text: '图表绘制', link: '/plugins/diagram' },
@@ -98,6 +99,7 @@ export default defineConfig({
                 { text: 'Barcode 2D', link: '/en/plugins/barcode2d' },
                 { text: 'Code Block', link: '/en/plugins/codeblock' },
                 { text: 'DOCX Import/Export', link: '/en/plugins/docx' },
+                { text: 'PDF Export', link: '/en/plugins/pdf' },
                 { text: 'Excel Import', link: '/en/plugins/excel' },
                 {
                   text: 'Floating Toolbar',
