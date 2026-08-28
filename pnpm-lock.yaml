@@ -430,6 +430,46 @@ importers:
         specifier: ^3.3.0
         version: 3.5.2(vite@4.5.14(@types/node@20.19.41)(sass@1.99.0))
 
+  packages/spellcheck:
+    dependencies:
+      '@cspell/dict-en_us':
+        specifier: ^4.4.37
+        version: 4.4.37
+      cspell-trie-lib:
+        specifier: ^10.1.1
+        version: 10.1.1(@cspell/cspell-types@10.1.1)
+    devDependencies:
+      '@hufe921/canvas-editor':
+        specifier: 1.0.2
+        version: 1.0.2
+      '@rollup/plugin-typescript':
+        specifier: ^12.3.0
+        version: 12.3.0(rollup@4.60.4)(tslib@2.8.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 4.33.0
+        version: 4.33.0(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@5.9.3))(eslint@7.32.0)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 4.33.0
+        version: 4.33.0(eslint@7.32.0)(typescript@5.9.3)
+      eslint:
+        specifier: 7.32.0
+        version: 7.32.0
+      sass:
+        specifier: ^1.69.2
+        version: 1.99.0
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.0.2
+        version: 5.9.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.5.14(@types/node@20.19.41)(sass@1.99.0)
+      vite-plugin-css-injected-by-js:
+        specifier: ^3.3.0
+        version: 3.5.2(vite@4.5.14(@types/node@20.19.41)(sass@1.99.0))
+
 packages:
 
   '@algolia/abtesting@1.18.1':
@@ -535,6 +575,13 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@cspell/cspell-types@10.1.1':
+    resolution: {integrity: sha512-lsc+/pazJQ47Zy7qyuFiQRZzco+kBSUmAtCzbmT96pFpAVxR+b4A8qRBoTdiq4OXBRXRT+CqWMNynSiwQJWM6g==}
+    engines: {node: '>=22.18.0'}
+
+  '@cspell/dict-en_us@4.4.37':
+    resolution: {integrity: sha512-rMKyPrk2SKmDU+Bj0U0ixsv4Du93oijwovc8XlUin0zwKOJZb0/PFG5Df4P8CrM2CrLeovpaFvhoI98DigxBLw==}
 
   '@docsearch/css@3.8.2':
     resolution: {integrity: sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ==}
@@ -883,6 +930,9 @@ packages:
     resolution: {integrity: sha512-IIjefk0fj0R0v5T16tjNWuwFdCT6O5GsgR+vw/Xp4fxyHu7rA5SbvpdQJ3hapOCBQaTmJd8Vhe4i7RBcVDnpVA==}
     engines: {node: '>=16.9.1'}
 
+  '@hufe921/canvas-editor@1.0.2':
+    resolution: {integrity: sha512-uAdI70JPqakd9+8TmSO1Fv77xDG86vCXaAVfqwMChJnAiz9Ub77l2ep0t8/lnydoIjdFqywcs+dea7x2f9vNEg==}
+
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
@@ -1226,6 +1276,19 @@ packages:
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.14.0||^3.0.0
+      tslib: '*'
+      typescript: '>=3.7.0'
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+      tslib:
+        optional: true
+
+  '@rollup/plugin-typescript@12.3.0':
+    resolution: {integrity: sha512-7DP0/p7y3t67+NabT9f8oTBFE6gGkto4SA6Np2oudYmZE/m1dt8RB0SjL1msMxFpLo631qjRCcBlAbq1ml/Big==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^2.14.0||^3.0.0||^4.0.0
       tslib: '*'
       typescript: '>=3.7.0'
     peerDependenciesMeta:
@@ -2148,6 +2211,12 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
+
+  cspell-trie-lib@10.1.1:
+    resolution: {integrity: sha512-4ico1ebFl9lvP1Yr4pD+FxOYRS7Ct+ImV8v0KcEclxMixqNku4NoVP/CvmE1AyyVB3FN16fITN0vo3ZAR79PFw==}
+    engines: {node: '>=22.18.0'}
+    peerDependencies:
+      '@cspell/cspell-types': 10.1.1
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
@@ -4610,6 +4679,10 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@cspell/cspell-types@10.1.1': {}
+
+  '@cspell/dict-en_us@4.4.37': {}
+
   '@docsearch/css@3.8.2': {}
 
   '@docsearch/js@3.8.2(@algolia/client-search@5.52.1)(search-insights@2.17.3)':
@@ -4840,6 +4913,8 @@ snapshots:
   '@hufe921/canvas-editor@0.9.86': {}
 
   '@hufe921/canvas-editor@0.9.88': {}
+
+  '@hufe921/canvas-editor@1.0.2': {}
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
@@ -5255,6 +5330,15 @@ snapshots:
       rollup: 3.30.0
       tslib: 2.8.1
 
+  '@rollup/plugin-typescript@12.3.0(rollup@4.60.4)(tslib@2.8.1)(typescript@5.9.3)':
+    dependencies:
+      '@rollup/pluginutils': 5.3.0(rollup@4.60.4)
+      resolve: 1.22.12
+      typescript: 5.9.3
+    optionalDependencies:
+      rollup: 4.60.4
+      tslib: 2.8.1
+
   '@rollup/pluginutils@5.3.0(rollup@3.30.0)':
     dependencies:
       '@types/estree': 1.0.9
@@ -5262,6 +5346,14 @@ snapshots:
       picomatch: 4.0.4
     optionalDependencies:
       rollup: 3.30.0
+
+  '@rollup/pluginutils@5.3.0(rollup@4.60.4)':
+    dependencies:
+      '@types/estree': 1.0.9
+      estree-walker: 2.0.2
+      picomatch: 4.0.4
+    optionalDependencies:
+      rollup: 4.60.4
 
   '@rollup/rollup-android-arm-eabi@4.60.4':
     optional: true
@@ -6242,6 +6334,10 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  cspell-trie-lib@10.1.1(@cspell/cspell-types@10.1.1):
+    dependencies:
+      '@cspell/cspell-types': 10.1.1
 
   csstype@3.2.3: {}
 

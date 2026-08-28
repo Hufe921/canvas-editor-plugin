@@ -15,3 +15,4 @@ This plugin library includes the following plugins:
 | [special-characters](./special-characters) | Special Character Selection |
 | [menstrual-history](./menstrual-history) | Menstrual History Record |
 | [markdown](./markdown) | Markdown Import/Export |
+| [spellcheck](./spellcheck) | English Spellcheck |

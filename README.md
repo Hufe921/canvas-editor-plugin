@@ -170,3 +170,16 @@ instance.command.executeImportMarkdown({
   value: '# Hello World\n\nThis is a **bold** text.'
 })
 ```
+
+- @hufe921/canvas-editor-plugin-spellcheck
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import spellcheckPlugin from '@hufe921/canvas-editor-plugin-spellcheck'
+
+const instance = new Editor()
+instance.use(spellcheckPlugin, options?: ISpellcheckPluginOption)
+
+// ignore the given word (case-insensitive)
+instance.command.executeSpellcheckIgnoreWord('word')
+```

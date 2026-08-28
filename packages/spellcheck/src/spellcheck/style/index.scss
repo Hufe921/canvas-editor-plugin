@@ -1,0 +1,170 @@
+.ce-spellcheck-popup {
+  position: fixed;
+  z-index: 9999;
+  box-sizing: border-box;
+  min-width: 180px;
+  max-width: 280px;
+  padding: 4px;
+  overflow: hidden;
+  color: #1f2329;
+  font-size: 13px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  background: #ffffff;
+  border: 1px solid rgba(31, 35, 41, 0.06);
+  border-radius: 10px;
+  box-shadow:
+    0 4px 12px -2px rgba(31, 35, 41, 0.08),
+    0 12px 32px -4px rgba(31, 35, 41, 0.12);
+  animation: ce-spellcheck-popup-fade-in 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 6px 4px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  &__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: #f54a45;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__word {
+    padding-bottom: 4px;
+    overflow: hidden;
+    font-weight: 600;
+    text-decoration: underline wavy #f54a45;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__body {
+    max-height: 216px;
+    padding: 2px 0;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(31, 35, 41, 0.15);
+      border-radius: 2px;
+    }
+  }
+
+  &__suggestion {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    overflow: hidden;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+
+    &:hover {
+      color: #3370ff;
+      background: rgba(51, 112, 255, 0.08);
+    }
+
+    &:active {
+      background: rgba(51, 112, 255, 0.14);
+    }
+  }
+
+  &__empty {
+    padding: 10px;
+    color: #8f959e;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: #f0f1f4;
+  }
+
+  &__ignore {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 7px 10px;
+    overflow: hidden;
+    color: #646a73;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+
+    &:hover {
+      color: #1f2329;
+      background: #f5f6f7;
+    }
+  }
+
+  &__ignore-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+@keyframes ce-spellcheck-popup-fade-in {
+  from {
+    transform: translateY(3px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}

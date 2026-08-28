@@ -15,3 +15,4 @@
 | [special-characters](./special-characters) | 特殊字符选择 |
 | [menstrual-history](./menstrual-history) | 月经史记录 |
 | [markdown](./markdown) | Markdown 导入导出 |
+| [spellcheck](./spellcheck) | 英文拼写检查 |

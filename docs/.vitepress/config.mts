@@ -44,7 +44,8 @@ export default defineConfig({
                 { text: '图表绘制', link: '/plugins/diagram' },
                 { text: '大小写转换', link: '/plugins/case' },
                 { text: '特殊字符', link: '/plugins/special-characters' },
-                { text: '月经史', link: '/plugins/menstrual-history' }
+                { text: '月经史', link: '/plugins/menstrual-history' },
+                { text: '拼写检查', link: '/plugins/spellcheck' }
               ]
             }
           ]
@@ -112,6 +113,10 @@ export default defineConfig({
                 {
                   text: 'Menstrual History',
                   link: '/en/plugins/menstrual-history'
+                },
+                {
+                  text: 'Spellcheck',
+                  link: '/en/plugins/spellcheck'
                 }
               ]
             }
