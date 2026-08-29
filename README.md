@@ -137,6 +137,27 @@ command.executeOpenSpecialCharactersDialog({
 })
 ```
 
+- @hufe921/canvas-editor-plugin-signature
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import signaturePlugin from '@hufe921/canvas-editor-plugin-signature'
+
+const instance = new Editor()
+instance.use(signaturePlugin)
+
+command.executeSignature({
+  width?: number,
+  height?: number,
+  exportType?: 'png' | 'svg', // 导出图片格式，默认 svg
+  locale?: string, // 弹窗语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: Partial<ISignatureLang>, // 覆盖对应语言的弹窗文案
+  onClose?: () => void,
+  onCancel?: () => void,
+  onConfirm?: (payload: ISignatureResult | null) => void
+})
+```
+
 - @hufe921/canvas-editor-plugin-menstrual-history
 
 ```javascript
