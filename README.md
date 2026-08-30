@@ -204,3 +204,19 @@ instance.use(spellcheckPlugin, options?: ISpellcheckPluginOption)
 // ignore the given word (case-insensitive)
 instance.command.executeSpellcheckIgnoreWord('word')
 ```
+
+- @hufe921/canvas-editor-plugin-find-replace
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import findReplacePlugin from '@hufe921/canvas-editor-plugin-find-replace'
+
+const instance = new Editor()
+instance.use(findReplacePlugin)
+
+instance.command.executeFindReplace({
+  locale?: string, // 弹窗语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: Partial<IFindReplaceLang>, // 覆盖对应语言的弹窗文案
+  onClose?: () => void
+})
+```

@@ -45,7 +45,8 @@ export default defineConfig({
                 { text: '大小写转换', link: '/plugins/case' },
                 { text: '特殊字符', link: '/plugins/special-characters' },
                 { text: '月经史', link: '/plugins/menstrual-history' },
-                { text: '拼写检查', link: '/plugins/spellcheck' }
+                { text: '拼写检查', link: '/plugins/spellcheck' },
+                { text: '查找替换', link: '/plugins/find-replace' }
               ]
             }
           ]
@@ -117,6 +118,10 @@ export default defineConfig({
                 {
                   text: 'Spellcheck',
                   link: '/en/plugins/spellcheck'
+                },
+                {
+                  text: 'Find and Replace',
+                  link: '/en/plugins/find-replace'
                 }
               ]
             }
