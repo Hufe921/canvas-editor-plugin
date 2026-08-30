@@ -3,6 +3,7 @@
 ## Project Overview
 
 This is a **monorepo** for canvas-editor plugins. It uses:
+
 - **Package Manager**: pnpm (with workspaces)
 - **Monorepo Tool**: Lerna
 - **Language**: TypeScript
@@ -42,7 +43,19 @@ pnpm clean
 
 # Clean dist folders
 pnpm clean:dist
+
+# Docs dev server
+pnpm docs:dev
+
+# Docs build
+pnpm docs:build
 ```
+
+### Docs & Demo
+
+The docs site is built with VitePress (`pnpm docs:dev` / `pnpm docs:build`).
+The online demo lives in `demo/` (a workspace package, `pnpm --filter canvas-editor-plugin-demo dev/build`)
+and is deployed separately at `/canvas-editor-plugin-demo/`.
 
 ### Running Single Package Commands
 
@@ -58,6 +71,7 @@ pnpm type:check # TypeScript check
 ## Code Style Guidelines
 
 ### TypeScript Configuration
+
 - **Target**: ESNext
 - **Module**: ESNext (type: "module")
 - **Strict mode**: Enabled
@@ -65,6 +79,7 @@ pnpm type:check # TypeScript check
 - **Implicit returns**: Error
 
 ### Formatting (Prettier)
+
 - **Semicolons**: Never
 - **Quotes**: Single
 - **Print width**: 80
@@ -73,6 +88,7 @@ pnpm type:check # TypeScript check
 - **End of line**: LF
 
 ### ESLint Rules
+
 - Semicolons: Never (warning)
 - Quotes: Single (warning)
 - Console: Allowed
@@ -82,6 +98,7 @@ pnpm type:check # TypeScript check
 - `@ts-comment`: Allowed
 
 ### Naming Conventions
+
 - **Files**: camelCase (e.g., `importDocx.ts`, `exportDocx.ts`)
 - **Functions**: camelCase
 - **Constants**: UPPER_SNAKE_CASE for true constants
@@ -90,6 +107,7 @@ pnpm type:check # TypeScript check
 - **Plugin functions**: camelCase ending with "Plugin" (e.g., `barcodePlugin`, `docxPlugin`)
 
 ### Import Style
+
 ```typescript
 // Use single quotes
 import { Editor, ElementType } from '@hufe921/canvas-editor'
@@ -103,6 +121,7 @@ import exportDocx from './exportDocx'
 ### Code Patterns
 
 #### Plugin Structure
+
 ```typescript
 import { Editor } from '@hufe921/canvas-editor'
 
@@ -121,6 +140,7 @@ export default function myPlugin(editor: Editor) {
 ```
 
 #### Comments
+
 - Use `// ` for inline comments (with Chinese allowed in existing code)
 - Keep comments concise
 
@@ -136,6 +156,7 @@ Format: `<type>(<scope>): <subject>`
 **Types:** feat, fix, docs, dx, style, refactor, perf, test, workflow, build, ci, chore, types, wip, release, improve
 
 **Examples:**
+
 ```
 feat: add new plugin for diagrams
 fix: correct barcode rendering offset
@@ -143,6 +164,7 @@ refactor(barcode1d): simplify svg conversion
 ```
 
 **Revert:**
+
 ```
 revert: feat: add diagram plugin
 ```
@@ -150,6 +172,7 @@ revert: feat: add diagram plugin
 ## Package Structure
 
 Each package follows this structure:
+
 ```
 packages/<name>/
 ├── src/
@@ -169,6 +192,7 @@ packages/<name>/
 ## VS Code Settings
 
 Recommended settings (in `.vscode/settings.json`):
+
 - Format on save: Enabled
 - Default formatter: esbenp.prettier-vscode
 - Fix ESLint on save: Enabled

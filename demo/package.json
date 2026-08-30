@@ -1,0 +1,53 @@
+{
+  "name": "canvas-editor-plugin-demo",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "canvas-editor-plugin example",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "canvas-editor-plugin"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hufe921/canvas-editor": "^1.0.2",
+    "@hufe921/canvas-editor-plugin-barcode1d": "workspace:*",
+    "@hufe921/canvas-editor-plugin-barcode2d": "workspace:*",
+    "@hufe921/canvas-editor-plugin-case": "workspace:*",
+    "@hufe921/canvas-editor-plugin-codeblock": "workspace:*",
+    "@hufe921/canvas-editor-plugin-comment": "workspace:*",
+    "@hufe921/canvas-editor-plugin-diagram": "workspace:*",
+    "@hufe921/canvas-editor-plugin-docx": "workspace:*",
+    "@hufe921/canvas-editor-plugin-excel": "workspace:*",
+    "@hufe921/canvas-editor-plugin-find-replace": "workspace:*",
+    "@hufe921/canvas-editor-plugin-floating-toolbar": "workspace:*",
+    "@hufe921/canvas-editor-plugin-markdown": "workspace:*",
+    "@hufe921/canvas-editor-plugin-menstrual-history": "workspace:*",
+    "@hufe921/canvas-editor-plugin-mention": "workspace:*",
+    "@hufe921/canvas-editor-plugin-signature": "workspace:*",
+    "@hufe921/canvas-editor-plugin-special-characters": "workspace:*",
+    "@hufe921/canvas-editor-plugin-spellcheck": "workspace:*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "4.33.0",
+    "@typescript-eslint/parser": "4.33.0",
+    "eslint": "7.32.0",
+    "sass": "^1.69.2",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9"
+  }
+}

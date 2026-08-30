@@ -1,0 +1,15 @@
+{
+  "extends": ["../tsconfig.json"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "",
+    "baseUrl": ".",
+    // 跳过插件/canvas-editor 产物 d.ts 的内部检查（其内部别名/未导入类型与本项目无关）
+    "skipLibCheck": true,
+    "paths": {
+      // 各插件 dist 类型声明内嵌旧版 canvas-editor，统一解析到 demo 使用的版本
+      "@hufe921/canvas-editor": ["./node_modules/@hufe921/canvas-editor"]
+    }
+  },
+  "include": ["./src/**/*.ts"]
+}

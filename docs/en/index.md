@@ -14,24 +14,52 @@ hero:
       link: /en/plugins/
 
 features:
-  - title: Barcode
-    details: Support 1D and 2D barcode generation and insertion
+  - title: Barcode 1D
+    details: 1D Barcode Generation
+    link: /en/plugins/barcode1d
+  - title: Barcode 2D
+    details: 2D Barcode Generation
+    link: /en/plugins/barcode2d
   - title: Code Block
-    details: Support code block syntax highlighting
-  - title: Document Import/Export
-    details: Support DOCX and Excel file import/export
+    details: Code Block Highlighting
+    link: /en/plugins/codeblock
+  - title: DOCX
+    details: DOCX Import/Export
+    link: /en/plugins/docx
+  - title: Excel
+    details: Excel Import
+    link: /en/plugins/excel
+  - title: Floating Toolbar
+    details: Floating Toolbar
+    link: /en/plugins/floating-toolbar
   - title: Diagram
-    details: Integrated diagram drawing functionality
+    details: Diagram Drawing
+    link: /en/plugins/diagram
+  - title: Case Converter
+    details: Case Conversion
+    link: /en/plugins/case
   - title: Special Characters
-    details: Rich special character selection
-  - title: More Features
-    details: Continuously updated plugin ecosystem
+    details: Special Character Selection
+    link: /en/plugins/special-characters
+  - title: Menstrual History
+    details: Menstrual History Record
+    link: /en/plugins/menstrual-history
+  - title: Markdown
+    details: Markdown Import/Export
+    link: /en/plugins/markdown
+  - title: Spellcheck
+    details: English Spellcheck
+    link: /en/plugins/spellcheck
+  - title: Signature
+    details: Handwritten Signature
+    link: /en/plugins/signature
+  - title: Find and Replace
+    details: Find and Replace
+    link: /en/plugins/find-replace
+  - title: Mention
+    details: '@Mention'
+    link: /en/plugins/mention
+  - title: Comment
+    details: Comment
+    link: /en/plugins/comment
 ---
-
-## Online Demo
-
-<iframe src="https://codesandbox.io/embed/nostalgic-grothendieck-fwm59s?fontsize=14&hidenavigation=1&theme=dark"
-        style="width:100%; height:80vh; border:0; border-radius: 4px; overflow:hidden;"
-        title="nostalgic-grothendieck-fwm59s"
-        allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-        sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-downloads"></iframe>

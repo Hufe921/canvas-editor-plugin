@@ -16,7 +16,8 @@ export default defineConfig({
           { text: '插件', link: '/plugins/' },
           {
             text: 'Demo',
-            link: 'https://codesandbox.io/embed/nostalgic-grothendieck-fwm59s?fontsize=14&hidenavigation=1&theme=dark'
+            link: 'https://hufe.club/canvas-editor-plugin-demo/',
+            target: '_blank'
           }
         ],
         sidebar: {
@@ -80,7 +81,8 @@ export default defineConfig({
           { text: 'Plugins', link: '/en/plugins/' },
           {
             text: 'Demo',
-            link: 'https://codesandbox.io/embed/nostalgic-grothendieck-fwm59s?fontsize=14&hidenavigation=1&theme=dark'
+            link: 'https://hufe.club/canvas-editor-plugin-demo/',
+            target: '_blank'
           }
         ],
         sidebar: {

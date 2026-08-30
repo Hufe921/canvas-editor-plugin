@@ -33,7 +33,59 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.52.1)(@types/node@18.19.130)(axios@1.16.1)(postcss@8.5.14)(sass@1.99.0)(search-insights@2.17.3)(typescript@5.9.3)
 
-  example/main:
+  demo:
+    dependencies:
+      '@hufe921/canvas-editor':
+        specifier: ^1.0.2
+        version: 1.0.2
+      '@hufe921/canvas-editor-plugin-barcode1d':
+        specifier: workspace:*
+        version: link:../packages/barcode1d
+      '@hufe921/canvas-editor-plugin-barcode2d':
+        specifier: workspace:*
+        version: link:../packages/barcode2d
+      '@hufe921/canvas-editor-plugin-case':
+        specifier: workspace:*
+        version: link:../packages/case
+      '@hufe921/canvas-editor-plugin-codeblock':
+        specifier: workspace:*
+        version: link:../packages/codeblock
+      '@hufe921/canvas-editor-plugin-comment':
+        specifier: workspace:*
+        version: link:../packages/comment
+      '@hufe921/canvas-editor-plugin-diagram':
+        specifier: workspace:*
+        version: link:../packages/diagram
+      '@hufe921/canvas-editor-plugin-docx':
+        specifier: workspace:*
+        version: link:../packages/docx
+      '@hufe921/canvas-editor-plugin-excel':
+        specifier: workspace:*
+        version: link:../packages/excel
+      '@hufe921/canvas-editor-plugin-find-replace':
+        specifier: workspace:*
+        version: link:../packages/findReplace
+      '@hufe921/canvas-editor-plugin-floating-toolbar':
+        specifier: workspace:*
+        version: link:../packages/floatingToolbar
+      '@hufe921/canvas-editor-plugin-markdown':
+        specifier: workspace:*
+        version: link:../packages/markdown
+      '@hufe921/canvas-editor-plugin-menstrual-history':
+        specifier: workspace:*
+        version: link:../packages/menstrualHistory
+      '@hufe921/canvas-editor-plugin-mention':
+        specifier: workspace:*
+        version: link:../packages/mention
+      '@hufe921/canvas-editor-plugin-signature':
+        specifier: workspace:*
+        version: link:../packages/signature
+      '@hufe921/canvas-editor-plugin-special-characters':
+        specifier: workspace:*
+        version: link:../packages/specialCharacters
+      '@hufe921/canvas-editor-plugin-spellcheck':
+        specifier: workspace:*
+        version: link:../packages/spellcheck
     devDependencies:
       '@rollup/plugin-typescript':
         specifier: ^10.0.1

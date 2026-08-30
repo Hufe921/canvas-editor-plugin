@@ -123,7 +123,8 @@ const toolbarRegisterList: IToolbarRegister[] = [
 
 function createToolbar(editor: Editor): HTMLDivElement {
   const toolbarContainer = document.createElement('div')
-  toolbarContainer.classList.add(`${PLUGIN_PREFIX}-floating-toolbar`)
+  // 初始隐藏，等待首次非折叠选区的 rangeStyleChange 再显示
+  toolbarContainer.classList.add(`${PLUGIN_PREFIX}-floating-toolbar`, 'hide')
   for (const toolbar of toolbarRegisterList) {
     if (toolbar.render) {
       toolbar.render(toolbarContainer, editor)

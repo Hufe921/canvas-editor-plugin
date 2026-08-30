@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Canvas Editor Plugin Playground</title>
+  </head>
+
+  <body>
+    <div id="app">
+      <header class="nav">
+        <div class="nav__brand">
+          <span class="nav__title">Canvas Editor Plugin</span>
+          <span class="nav__badge">Playground</span>
+        </div>
+        <nav class="nav__links">
+          <a href="/canvas-editor-plugin/">文档</a>
+          <a
+            href="https://github.com/Hufe921/canvas-editor-plugin"
+            target="_blank"
+            rel="noreferrer"
+            >GitHub</a
+          >
+        </nav>
+      </header>
+      <div class="body">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="editor-main">
+          <div class="tips">
+            <span class="tips__chip">选中文字 → 浮动工具栏</span>
+            <span class="tips__chip">右键选区 → 添加批注</span>
+            <span class="tips__chip">输入 @ → 提及</span>
+            <span class="tips__chip">⌘/Ctrl + F → 查找替换</span>
+          </div>
+          <div id="editor-wrap">
+            <div id="editor"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <input type="file" id="file-docx" accept=".docx" hidden />
+    <input type="file" id="file-excel" accept=".xlsx" hidden />
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
