@@ -97,4 +97,38 @@
       background: url(../icons/highlight.svg);
     }
   }
+
+  // 通用项样式
+  .ce-item {
+    min-width: 20px;
+    margin: 0 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+
+    &:hover,
+    &.active {
+      background-color: rgba(25, 55, 88, .07);
+    }
+
+    i {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-style: normal;
+      font-size: 14px;
+    }
+  }
+}
+
+/* AI润色图标 */
+.icon-ai-polish {
+  background-image: url(../icons/ai-polish.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
