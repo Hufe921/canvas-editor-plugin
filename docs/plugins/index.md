@@ -19,3 +19,4 @@
 | [signature](./signature)                   | 手写签名          |
 | [find-replace](./find-replace)             | 查找替换          |
 | [mention](./mention)                       | @提及             |
+| [comment](./comment)                       | 批注              |

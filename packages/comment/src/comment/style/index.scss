@@ -1,0 +1,153 @@
+.ce-comment-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  // top/height 由插件按可视滚动视口实时计算（行内样式覆盖）
+  // 超出可视区的卡片直接裁剪，滚动编辑器后重布局自然出现
+  overflow: hidden;
+  background: #f5f6f8;
+  border-left: 1px solid #e5e6eb;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 2;
+}
+
+// 容器过窄兜底覆盖正文时，半透明背景提示是浮层
+.ce-comment-rail--overlay {
+  background: rgba(245, 246, 248, 0.92);
+}
+
+.ce-comment-line-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  // 高于批注栏背景（连接线终点即卡片左缘，不会压到卡片）
+  z-index: 3;
+}
+
+.ce-comment-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-size: 13px;
+  color: #333333;
+  box-sizing: border-box;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.ce-comment-card--active {
+  border-color: #f54a45;
+  box-shadow: 0 4px 12px rgba(245, 74, 69, 0.15);
+}
+
+.ce-comment-card--editing {
+  cursor: default;
+}
+
+.ce-comment-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+  // 给右上角 × 按钮留位
+  padding-right: 14px;
+}
+
+.ce-comment-card__user {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ce-comment-card__time {
+  font-size: 12px;
+  color: #999999;
+  white-space: nowrap;
+}
+
+.ce-comment-card__close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font-size: 14px;
+  line-height: 1;
+  color: #999999;
+  cursor: pointer;
+}
+
+.ce-comment-card__close:hover {
+  color: #f54a45;
+}
+
+.ce-comment-card__content {
+  font-size: 13px;
+  color: #333333;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.ce-comment-card__textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: none;
+  outline: none;
+  border: 1px solid #e5e6eb;
+  border-radius: 2px;
+  background: #fafafa;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #333333;
+  line-height: 1.4;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.ce-comment-card__textarea:focus {
+  border-color: #f54a45;
+  background: #ffffff;
+}
+
+.ce-comment-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ce-comment-card__button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: #999999;
+}
+
+.ce-comment-card__button:hover {
+  color: #666666;
+}
+
+.ce-comment-card__button--primary {
+  background: #f54a45;
+  border-radius: 3px;
+  padding: 3px 10px;
+  color: #ffffff;
+}
+
+.ce-comment-card__button--primary:hover {
+  background: #d93631;
+  color: #ffffff;
+}

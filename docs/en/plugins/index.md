@@ -19,3 +19,4 @@ This plugin library includes the following plugins:
 | [signature](./signature)                   | Handwritten Signature       |
 | [find-replace](./find-replace)             | Find and Replace            |
 | [mention](./mention)                       | @Mention                    |
+| [comment](./comment)                       | Comment                     |

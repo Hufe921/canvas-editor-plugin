@@ -1,0 +1,49 @@
+{
+  "name": "@hufe921/canvas-editor-plugin-comment",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "comment plugin for canvas-editor",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "typings": "./dist/src/comment/index.d.ts",
+  "main": "./dist/comment.umd.cjs",
+  "module": "./dist/comment.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "comment"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode lib",
+    "type:check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hufe921/canvas-editor": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@hufe921/canvas-editor": "1.0.2",
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "4.33.0",
+    "@typescript-eslint/parser": "4.33.0",
+    "eslint": "7.32.0",
+    "sass": "^1.97.3",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9",
+    "vite-plugin-css-injected-by-js": "^3.3.0"
+  }
+}

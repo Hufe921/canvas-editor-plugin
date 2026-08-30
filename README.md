@@ -237,3 +237,26 @@ instance.use(mentionPlugin, {
 // 程序化唤起候选浮层
 instance.command.executeMention()
 ```
+
+- @hufe921/canvas-editor-plugin-comment
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import commentPlugin from '@hufe921/canvas-editor-plugin-comment'
+
+const instance = new Editor()
+instance.use(commentPlugin, {
+  highlightColor?: string, // 批注高亮色，默认 #fde7e9
+  railWidth?: number, // 右侧批注栏宽度（px），默认 220
+  lineColor?: string, // 连接线颜色，默认 #f54a45
+  userColor?: string, // 批注卡片作者名颜色，默认 #f54a45
+  user?: string, // 当前用户名
+  onAdd?: (comment: IComment) => void,
+  onRemove?: (id: string) => void
+})
+
+instance.command.executeAddComment() // 对当前选区添加批注
+instance.command.executeRemoveComment(id?: string) // 删除批注
+instance.command.executeGetCommentList() // 获取批注列表
+instance.command.executeSetCommentList(list) // 恢复批注列表
+```
