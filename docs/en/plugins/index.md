@@ -16,4 +16,6 @@ This plugin library includes the following plugins:
 | [menstrual-history](./menstrual-history)   | Menstrual History Record    |
 | [markdown](./markdown)                     | Markdown Import/Export      |
 | [spellcheck](./spellcheck)                 | English Spellcheck          |
+| [signature](./signature)                   | Handwritten Signature       |
 | [find-replace](./find-replace)             | Find and Replace            |
+| [mention](./mention)                       | @Mention                    |

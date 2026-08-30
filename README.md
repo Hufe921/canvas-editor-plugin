@@ -220,3 +220,20 @@ instance.command.executeFindReplace({
   onClose?: () => void
 })
 ```
+
+- @hufe921/canvas-editor-plugin-mention
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
+
+const instance = new Editor()
+instance.use(mentionPlugin, {
+  dataList: [{ id: '1', name: '张三' }],
+  onSelect?: (item: IMentionItem) => void,
+  onClick?: (element: IElement) => void
+})
+
+// 程序化唤起候选浮层
+instance.command.executeMention()
+```

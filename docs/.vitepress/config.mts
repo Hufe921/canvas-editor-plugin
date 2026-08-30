@@ -46,7 +46,9 @@ export default defineConfig({
                 { text: '特殊字符', link: '/plugins/special-characters' },
                 { text: '月经史', link: '/plugins/menstrual-history' },
                 { text: '拼写检查', link: '/plugins/spellcheck' },
-                { text: '查找替换', link: '/plugins/find-replace' }
+                { text: '签名', link: '/plugins/signature' },
+                { text: '查找替换', link: '/plugins/find-replace' },
+                { text: '@提及', link: '/plugins/mention' }
               ]
             }
           ]
@@ -120,8 +122,16 @@ export default defineConfig({
                   link: '/en/plugins/spellcheck'
                 },
                 {
+                  text: 'Signature',
+                  link: '/en/plugins/signature'
+                },
+                {
                   text: 'Find and Replace',
                   link: '/en/plugins/find-replace'
+                },
+                {
+                  text: 'Mention',
+                  link: '/en/plugins/mention'
                 }
               ]
             }
