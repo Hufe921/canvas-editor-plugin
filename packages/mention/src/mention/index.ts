@@ -189,21 +189,39 @@ class Mention {
     const command = this.editor.command
     const elementList = command.getValue().data.main
     const { startIndex } = command.getRange()
-    // 触发符被删除时关闭
-    if (elementList[this.triggerIndex]?.value !== this.trigger) {
-      this.close()
-      return
-    }
     // 光标移动到触发符之前时关闭
     if (startIndex <= this.triggerIndex) {
       this.close()
       return
     }
-    // 拼接触发符之后到光标之间的文本作为查询词
-    const query = elementList
-      .slice(this.triggerIndex + 1, startIndex + 1)
-      .map(element => element.value)
-      .join('')
+    // 逐字符回溯至触发符，拼接其间文本作为查询词。
+    // 注意：1.0.x 中连续输入会合并为多字符元素，
+    // range 索引按字符单位计数（非文本元素占 1 单位）
+    let query = ''
+    let rest = startIndex
+    let foundTrigger = false
+    for (let i = elementList.length - 1; i >= 0 && rest > 0; i--) {
+      const element = elementList[i]
+      if (element.type && element.type !== ElementType.TEXT) break
+      const chars = Array.from(element.value || '')
+      // 光标可能落在元素内部，只取光标前的字符
+      const take = Math.min(chars.length, rest)
+      for (let c = take - 1; c >= 0; c--) {
+        const char = chars[c]
+        rest--
+        if (char === this.trigger) {
+          foundTrigger = true
+          break
+        }
+        query = char + query
+      }
+      if (foundTrigger) break
+    }
+    // 触发符被删除或查询词跨界时关闭
+    if (!foundTrigger) {
+      this.close()
+      return
+    }
     this.renderList(this.filterDataList(query), query)
     this.updatePosition()
   }
