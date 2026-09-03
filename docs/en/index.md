@@ -65,4 +65,7 @@ features:
   - title: Suggestion
     details: Input Suggestion
     link: /en/plugins/suggestion
+  - title: Chart
+    details: ECharts Chart Insertion
+    link: /en/plugins/chart
 ---

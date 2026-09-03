@@ -21,3 +21,4 @@ This plugin library includes the following plugins:
 | [mention](./mention)                       | @Mention                    |
 | [comment](./comment)                       | Comment                     |
 | [suggestion](./suggestion)                 | Suggestion                  |
+| [chart](./chart)                           | Chart                       |

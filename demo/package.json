@@ -26,6 +26,7 @@
     "@hufe921/canvas-editor-plugin-barcode1d": "workspace:*",
     "@hufe921/canvas-editor-plugin-barcode2d": "workspace:*",
     "@hufe921/canvas-editor-plugin-case": "workspace:*",
+    "@hufe921/canvas-editor-plugin-chart": "workspace:*",
     "@hufe921/canvas-editor-plugin-codeblock": "workspace:*",
     "@hufe921/canvas-editor-plugin-comment": "workspace:*",
     "@hufe921/canvas-editor-plugin-diagram": "workspace:*",
@@ -39,7 +40,8 @@
     "@hufe921/canvas-editor-plugin-signature": "workspace:*",
     "@hufe921/canvas-editor-plugin-special-characters": "workspace:*",
     "@hufe921/canvas-editor-plugin-spellcheck": "workspace:*",
-    "@hufe921/canvas-editor-plugin-suggestion": "workspace:*"
+    "@hufe921/canvas-editor-plugin-suggestion": "workspace:*",
+    "echarts": "^5.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^10.0.1",

@@ -65,4 +65,7 @@ features:
   - title: 输入联想
     details: 输入联想短语自动提醒
     link: /plugins/suggestion
+  - title: 图表
+    details: ECharts 图表插入
+    link: /plugins/chart
 ---

@@ -3,6 +3,7 @@ import Editor, { ElementType } from '@hufe921/canvas-editor'
 import barcode1dPlugin from '@hufe921/canvas-editor-plugin-barcode1d'
 import barcode2dPlugin from '@hufe921/canvas-editor-plugin-barcode2d'
 import casePlugin from '@hufe921/canvas-editor-plugin-case'
+import chartPlugin from '@hufe921/canvas-editor-plugin-chart'
 import codeblockPlugin from '@hufe921/canvas-editor-plugin-codeblock'
 import commentPlugin from '@hufe921/canvas-editor-plugin-comment'
 import diagramPlugin from '@hufe921/canvas-editor-plugin-diagram'
@@ -52,6 +53,7 @@ const command = instance.command
 instance.use(barcode1dPlugin)
 instance.use(barcode2dPlugin)
 instance.use(casePlugin)
+instance.use(chartPlugin)
 instance.use(codeblockPlugin)
 instance.use(commentPlugin, {
   user: 'demo',
@@ -216,7 +218,7 @@ const toolbarGroups: IToolbarGroup[] = [
         }
       },
       {
-        label: '图表',
+        label: '流程图',
         icon: icon(
           '<rect x="6" y="1.5" width="4" height="3.2" rx="1"/>' +
             '<rect x="1.5" y="11.3" width="4" height="3.2" rx="1"/>' +
@@ -245,6 +247,15 @@ const toolbarGroups: IToolbarGroup[] = [
               ])
             }
           })
+        }
+      },
+      {
+        label: '图表',
+        icon: icon('<path d="M2.5 13.5h11M4.5 13.5V8M8 13.5V4.5M11.5 13.5V6.5"/>'),
+        tip: '打开图表弹窗，配置柱状图/折线图/饼图后以图片插入',
+        toast: '已打开图表弹窗',
+        onClick: () => {
+          command.executeChart()
         }
       },
       {

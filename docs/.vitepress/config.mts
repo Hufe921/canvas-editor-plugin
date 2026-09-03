@@ -51,7 +51,8 @@ export default defineConfig({
                 { text: '查找替换', link: '/plugins/find-replace' },
                 { text: '@提及', link: '/plugins/mention' },
                 { text: '批注', link: '/plugins/comment' },
-                { text: '输入联想', link: '/plugins/suggestion' }
+                { text: '输入联想', link: '/plugins/suggestion' },
+                { text: '图表', link: '/plugins/chart' }
               ]
             }
           ]
@@ -144,6 +145,10 @@ export default defineConfig({
                 {
                   text: 'Suggestion',
                   link: '/en/plugins/suggestion'
+                },
+                {
+                  text: 'Chart',
+                  link: '/en/plugins/chart'
                 }
               ]
             }

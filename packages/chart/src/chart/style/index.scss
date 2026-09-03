@@ -1,0 +1,197 @@
+.ce-chart-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .5;
+  background: #000000;
+  z-index: 99;
+}
+
+.ce-chart-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ce-chart-dialog {
+  width: 720px;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  box-shadow: 0 2px 12px 0 rgb(56 56 56 / 20%);
+  border: 1px solid #e2e6ed;
+  border-radius: 2px;
+}
+
+.ce-chart-header {
+  height: 40px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+}
+
+.ce-chart-tabs {
+  display: flex;
+  height: 100%;
+}
+
+.ce-chart-tab {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666666;
+  border-bottom: 2px solid transparent;
+
+  &.active {
+    color: #347ef2;
+    border-bottom-color: #347ef2;
+  }
+}
+
+.ce-chart-close {
+  cursor: pointer;
+  font-size: 18px;
+  font-style: normal;
+  color: #999999;
+
+  &:hover {
+    color: #333333;
+  }
+}
+
+.ce-chart-main {
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.ce-chart-form-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+
+  > span {
+    width: 150px;
+    flex-shrink: 0;
+    font-size: 14px;
+    color: #333333;
+  }
+
+  input,
+  select {
+    flex: 1;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    outline: none;
+    font-size: 14px;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #347ef2;
+    }
+  }
+}
+
+.ce-chart-advanced {
+  textarea {
+    width: 100%;
+    height: 200px;
+    padding: 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    outline: none;
+    resize: none;
+    font-family: monospace;
+    font-size: 13px;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #347ef2;
+    }
+  }
+}
+
+.ce-chart-json-error {
+  display: none;
+  margin-top: 6px;
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+.ce-chart-preview {
+  margin-top: 15px;
+  padding: 10px;
+  min-height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px dashed #e2e6ed;
+
+  img {
+    max-width: 100%;
+    max-height: 260px;
+  }
+}
+
+.ce-chart-preview-error {
+  display: none;
+  color: #f56c6c;
+  font-size: 13px;
+}
+
+.ce-chart-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 15px;
+  border-top: 1px solid #e2e6ed;
+
+  button {
+    height: 30px;
+    padding: 0 16px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      color: #347ef2;
+      border-color: #347ef2;
+    }
+  }
+
+  .ce-chart-insert {
+    color: #ffffff;
+    background: #347ef2;
+    border-color: #347ef2;
+
+    &:hover {
+      // 覆盖通用 button:hover 的文字变色，避免蓝底蓝字
+      color: #ffffff;
+      opacity: .9;
+    }
+  }
+}
+
+// 隐藏渲染容器：不可见但参与布局，供 echarts 渲染导出
+.ce-chart-render {
+  position: fixed;
+  left: -99999px;
+  top: -99999px;
+}

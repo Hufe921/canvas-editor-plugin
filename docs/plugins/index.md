@@ -21,3 +21,4 @@
 | [mention](./mention)                       | @提及             |
 | [comment](./comment)                       | 批注              |
 | [suggestion](./suggestion)                 | 输入联想          |
+| [chart](./chart)                           | 图表              |
