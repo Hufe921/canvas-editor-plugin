@@ -62,4 +62,7 @@ features:
   - title: Comment
     details: Comment
     link: /en/plugins/comment
+  - title: Suggestion
+    details: Input Suggestion
+    link: /en/plugins/suggestion
 ---

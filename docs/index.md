@@ -62,4 +62,7 @@ features:
   - title: 批注
     details: 批注
     link: /plugins/comment
+  - title: 输入联想
+    details: 输入联想短语自动提醒
+    link: /plugins/suggestion
 ---

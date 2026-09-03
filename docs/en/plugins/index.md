@@ -20,3 +20,4 @@ This plugin library includes the following plugins:
 | [find-replace](./find-replace)             | Find and Replace            |
 | [mention](./mention)                       | @Mention                    |
 | [comment](./comment)                       | Comment                     |
+| [suggestion](./suggestion)                 | Suggestion                  |

@@ -16,6 +16,7 @@ import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
 import signaturePlugin from '@hufe921/canvas-editor-plugin-signature'
 import specialCharactersPlugin from '@hufe921/canvas-editor-plugin-special-characters'
 import spellcheckPlugin from '@hufe921/canvas-editor-plugin-spellcheck'
+import suggestionPlugin from '@hufe921/canvas-editor-plugin-suggestion'
 // 以下包的命令类型增强声明未从入口 re-export，需显式引入对应声明文件
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/importDocx'
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/exportDocx'
@@ -89,6 +90,21 @@ instance.use(specialCharactersPlugin)
 instance.use(spellcheckPlugin, {
   suggestionCount: 5,
   ignoreWords: ['canvas-editor']
+})
+instance.use(suggestionPlugin, {
+  dataList: [
+    { id: '1', name: '患者男性，否认药物过敏史' },
+    { id: '2', name: '患者女性，既往体健，无高血压、糖尿病等慢性病史' },
+    { id: '3', name: '神志清楚，精神可，查体合作' },
+    { id: '4', name: '心肺听诊未闻及明显异常' },
+    { id: '5', name: '腹部平软，无压痛及反跳痛' },
+    { id: '6', name: '双侧瞳孔等大等圆，对光反射灵敏' },
+    { id: '7', name: '建议完善血常规、尿常规、生化全套检查' },
+    { id: '8', name: '嘱患者清淡饮食，注意休息，不适随诊' }
+  ],
+  onSelect: item => {
+    console.log('suggestion select:', item)
+  }
 })
 
 // 月经史图片固定的显示高度

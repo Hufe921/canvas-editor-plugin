@@ -50,7 +50,8 @@ export default defineConfig({
                 { text: '签名', link: '/plugins/signature' },
                 { text: '查找替换', link: '/plugins/find-replace' },
                 { text: '@提及', link: '/plugins/mention' },
-                { text: '批注', link: '/plugins/comment' }
+                { text: '批注', link: '/plugins/comment' },
+                { text: '输入联想', link: '/plugins/suggestion' }
               ]
             }
           ]
@@ -139,6 +140,10 @@ export default defineConfig({
                 {
                   text: 'Comment',
                   link: '/en/plugins/comment'
+                },
+                {
+                  text: 'Suggestion',
+                  link: '/en/plugins/suggestion'
                 }
               ]
             }
