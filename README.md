@@ -260,3 +260,19 @@ instance.command.executeRemoveComment(id?: string) // 删除批注
 instance.command.executeGetCommentList() // 获取批注列表
 instance.command.executeSetCommentList(list) // 恢复批注列表
 ```
+
+- @hufe921/canvas-editor-plugin-formula
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import formulaPlugin from '@hufe921/canvas-editor-plugin-formula'
+
+const instance = new Editor()
+instance.use(formulaPlugin, {
+  isRegisterEditContextMenu?: boolean, // 是否注册公式编辑右键菜单，默认 true
+  locale?: string, // 弹窗语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: Partial<IFormulaLang> // 覆盖对应语言的弹窗文案
+})
+
+instance.executeInsertFormula(latex: string) // 插入行内公式，右键公式可二次编辑
+```

@@ -22,3 +22,4 @@
 | [comment](./comment)                       | 批注              |
 | [suggestion](./suggestion)                 | 输入联想          |
 | [chart](./chart)                           | 图表              |
+| [formula](./formula)                       | LaTeX 公式        |

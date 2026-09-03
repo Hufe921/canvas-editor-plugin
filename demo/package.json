@@ -34,6 +34,7 @@
     "@hufe921/canvas-editor-plugin-excel": "workspace:*",
     "@hufe921/canvas-editor-plugin-find-replace": "workspace:*",
     "@hufe921/canvas-editor-plugin-floating-toolbar": "workspace:*",
+    "@hufe921/canvas-editor-plugin-formula": "workspace:*",
     "@hufe921/canvas-editor-plugin-markdown": "workspace:*",
     "@hufe921/canvas-editor-plugin-menstrual-history": "workspace:*",
     "@hufe921/canvas-editor-plugin-mention": "workspace:*",

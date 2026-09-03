@@ -52,7 +52,8 @@ export default defineConfig({
                 { text: '@提及', link: '/plugins/mention' },
                 { text: '批注', link: '/plugins/comment' },
                 { text: '输入联想', link: '/plugins/suggestion' },
-                { text: '图表', link: '/plugins/chart' }
+                { text: '图表', link: '/plugins/chart' },
+                { text: '公式', link: '/plugins/formula' }
               ]
             }
           ]
@@ -149,6 +150,10 @@ export default defineConfig({
                 {
                   text: 'Chart',
                   link: '/en/plugins/chart'
+                },
+                {
+                  text: 'Formula',
+                  link: '/en/plugins/formula'
                 }
               ]
             }

@@ -22,3 +22,4 @@ This plugin library includes the following plugins:
 | [comment](./comment)                       | Comment                     |
 | [suggestion](./suggestion)                 | Suggestion                  |
 | [chart](./chart)                           | Chart                       |
+| [formula](./formula)                       | LaTeX Formula               |

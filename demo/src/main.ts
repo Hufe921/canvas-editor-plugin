@@ -11,6 +11,7 @@ import docxPlugin from '@hufe921/canvas-editor-plugin-docx'
 import excelPlugin from '@hufe921/canvas-editor-plugin-excel'
 import findReplacePlugin from '@hufe921/canvas-editor-plugin-find-replace'
 import floatingToolbarPlugin from '@hufe921/canvas-editor-plugin-floating-toolbar'
+import formulaPlugin from '@hufe921/canvas-editor-plugin-formula'
 import markdownPlugin from '@hufe921/canvas-editor-plugin-markdown'
 import menstrualHistoryPlugin from '@hufe921/canvas-editor-plugin-menstrual-history'
 import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
@@ -69,6 +70,7 @@ instance.use(docxPlugin)
 instance.use(excelPlugin)
 instance.use(findReplacePlugin)
 instance.use(floatingToolbarPlugin)
+instance.use(formulaPlugin)
 instance.use(markdownPlugin)
 instance.use(menstrualHistoryPlugin)
 instance.use(mentionPlugin, {
@@ -256,6 +258,17 @@ const toolbarGroups: IToolbarGroup[] = [
         toast: '已打开图表弹窗',
         onClick: () => {
           command.executeChart()
+        }
+      },
+      {
+        label: '公式',
+        icon: icon('<path d="M13 3H4l5 5-5 5h9"/>'),
+        tip: '插入 LaTeX 公式（KaTeX 渲染）',
+        toast: '已插入公式',
+        onClick: () => {
+          command.executeInsertFormula(
+            'x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}'
+          )
         }
       },
       {

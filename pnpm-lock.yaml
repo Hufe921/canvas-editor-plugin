@@ -71,6 +71,9 @@ importers:
       '@hufe921/canvas-editor-plugin-floating-toolbar':
         specifier: workspace:*
         version: link:../packages/floatingToolbar
+      '@hufe921/canvas-editor-plugin-formula':
+        specifier: workspace:*
+        version: link:../packages/formula
       '@hufe921/canvas-editor-plugin-markdown':
         specifier: workspace:*
         version: link:../packages/markdown
@@ -498,6 +501,37 @@ importers:
       vite-plugin-css-injected-by-js:
         specifier: ^3.3.0
         version: 3.5.2(vite@4.5.14(@types/node@20.19.41)(sass@1.99.0))
+
+  packages/formula:
+    dependencies:
+      katex:
+        specifier: ^0.16.11
+        version: 0.16.47
+    devDependencies:
+      '@hufe921/canvas-editor':
+        specifier: 0.9.37
+        version: 0.9.37
+      '@rollup/plugin-typescript':
+        specifier: ^10.0.1
+        version: 10.0.1(rollup@3.30.0)(tslib@2.8.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 4.33.0
+        version: 4.33.0(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@5.9.3))(eslint@7.32.0)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 4.33.0
+        version: 4.33.0(eslint@7.32.0)(typescript@5.9.3)
+      eslint:
+        specifier: 7.32.0
+        version: 7.32.0
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.0.2
+        version: 5.9.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.5.14(@types/node@20.19.41)(sass@1.99.0)
 
   packages/markdown:
     dependencies:
@@ -2394,6 +2428,10 @@ packages:
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
 
+  commander@8.3.0:
+    resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
+    engines: {node: '>= 12'}
+
   compare-func@2.0.0:
     resolution: {integrity: sha512-zHig5N+tPWARooBnb0Zx1MFcdfpyJrfTJ3Y5L+IFvUm8rM74hHz66z0gw0x4tijh5CorKkKUCnW82R2vmpeCRA==}
 
@@ -3318,6 +3356,10 @@ packages:
 
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
+
+  katex@0.16.47:
+    resolution: {integrity: sha512-Eeo8Ys1doU1z+x8AZsPpQu+p/QcZBI5PeOo7QGQdy2x2m0MU/hYagBbGOmXwr5KVbEfVuWv9LpnQWeehogurjg==}
+    hasBin: true
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -6501,6 +6543,8 @@ snapshots:
 
   comma-separated-tokens@2.0.3: {}
 
+  commander@8.3.0: {}
+
   compare-func@2.0.0:
     dependencies:
       array-ify: 1.0.0
@@ -7553,6 +7597,10 @@ snapshots:
       pako: 1.0.11
       readable-stream: 2.3.8
       setimmediate: 1.0.5
+
+  katex@0.16.47:
+    dependencies:
+      commander: 8.3.0
 
   keyv@4.5.4:
     dependencies:
