@@ -276,3 +276,46 @@ instance.use(formulaPlugin, {
 
 instance.executeInsertFormula(latex: string) // 插入行内公式，右键公式可二次编辑
 ```
+
+- @hufe921/canvas-editor-plugin-chart
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import chartPlugin from '@hufe921/canvas-editor-plugin-chart'
+
+const instance = new Editor()
+instance.use(chartPlugin, {
+  width?: number, // 插入图表宽度，默认 600
+  height?: number, // 插入图表高度，默认 400
+  defaultOption?: object, // 打开弹窗时预填的 ECharts option（直接进入高级模式）
+  locale?: string, // 弹窗语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: Partial<IChartLang>, // 覆盖对应语言的弹窗文案
+  onInsert?: (option: object) => void // 插入图表回调，参数为最终生效的 ECharts option
+})
+
+instance.command.executeChart({
+  width?: number,
+  height?: number,
+  defaultOption?: object
+}) // 打开图表插入弹窗，支持柱状图、折线图、饼图；右键图表可二次编辑
+```
+
+- @hufe921/canvas-editor-plugin-suggestion
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import suggestionPlugin from '@hufe921/canvas-editor-plugin-suggestion'
+
+const instance = new Editor()
+instance.use(suggestionPlugin, {
+  dataList: [{ id: '1', name: '心肌梗死', value: '急性心肌梗死' }], // 候选数据（数组或返回数组的函数），value 缺省时插入 name
+  minLength?: number, // 触发联想的最小查询词长度，默认 1
+  max?: number, // 候选最多显示条数，默认 5
+  match?: 'prefix' | 'contains' | ((query: string, item: ISuggestionItem) => boolean), // 匹配方式，默认 prefix
+  onSelect?: (item: ISuggestionItem) => void, // 选中候选项回调
+  locale?: string, // 面板语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: Partial<ISuggestionLang> // 覆盖对应语言的面板文案
+})
+
+instance.command.executeSuggestion() // 程序化唤起候选浮层
+```
