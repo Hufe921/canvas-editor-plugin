@@ -24,3 +24,4 @@ This plugin library includes the following plugins:
 | [chart](./chart)                           | Chart                       |
 | [formula](./formula)                       | LaTeX Formula               |
 | [snake](./snake)                           | Snake Game                  |
+| [typing](./typing)                         | Typing Challenge Game       |

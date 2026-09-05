@@ -98,6 +98,9 @@ importers:
       '@hufe921/canvas-editor-plugin-suggestion':
         specifier: workspace:*
         version: link:../packages/suggestion
+      '@hufe921/canvas-editor-plugin-typing':
+        specifier: workspace:*
+        version: link:../packages/typing
       echarts:
         specifier: ^5.6.0
         version: 5.6.0
@@ -795,6 +798,33 @@ importers:
       vite-plugin-css-injected-by-js:
         specifier: ^3.3.0
         version: 3.5.2(vite@4.5.14(@types/node@20.19.41)(sass@1.99.0))
+
+  packages/typing:
+    devDependencies:
+      '@hufe921/canvas-editor':
+        specifier: 1.0.2
+        version: 1.0.2
+      '@rollup/plugin-typescript':
+        specifier: ^10.0.1
+        version: 10.0.1(rollup@3.30.0)(tslib@2.8.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 4.33.0
+        version: 4.33.0(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@5.9.3))(eslint@7.32.0)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 4.33.0
+        version: 4.33.0(eslint@7.32.0)(typescript@5.9.3)
+      eslint:
+        specifier: 7.32.0
+        version: 7.32.0
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.0.2
+        version: 5.9.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.5.14(@types/node@20.19.41)(sass@1.99.0)
 
 packages:
 

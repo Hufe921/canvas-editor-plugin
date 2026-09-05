@@ -74,4 +74,7 @@ features:
   - title: Snake
     details: Play Snake inside your document, score synced in real time
     link: /en/plugins/snake
+  - title: Typing Challenge
+    details: Type along the passage, per-character feedback with live stats
+    link: /en/plugins/typing
 ---

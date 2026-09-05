@@ -17,6 +17,7 @@ import menstrualHistoryPlugin from '@hufe921/canvas-editor-plugin-menstrual-hist
 import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
 import signaturePlugin from '@hufe921/canvas-editor-plugin-signature'
 import snakePlugin from '@hufe921/canvas-editor-plugin-snake'
+import typingPlugin from '@hufe921/canvas-editor-plugin-typing'
 import specialCharactersPlugin from '@hufe921/canvas-editor-plugin-special-characters'
 import spellcheckPlugin from '@hufe921/canvas-editor-plugin-spellcheck'
 import suggestionPlugin from '@hufe921/canvas-editor-plugin-suggestion'
@@ -94,6 +95,19 @@ instance.use(signaturePlugin)
 instance.use(snakePlugin, {
   onGameOver: result => {
     console.log('snake game over:', result)
+  }
+})
+instance.use(typingPlugin, {
+  // 题目由外部传入：5 关由短到长，中英文混合
+  passages: [
+    '千里之行，始于足下。',
+    'Well begun is half done.',
+    '不积跬步，无以至千里；不积小流，无以成江海。',
+    'Actions speak louder than words.',
+    'The quick brown fox jumps over the lazy dog.'
+  ],
+  onFinished: result => {
+    console.log('typing finished:', result)
   }
 })
 instance.use(specialCharactersPlugin)
@@ -259,7 +273,9 @@ const toolbarGroups: IToolbarGroup[] = [
       },
       {
         label: '图表',
-        icon: icon('<path d="M2.5 13.5h11M4.5 13.5V8M8 13.5V4.5M11.5 13.5V6.5"/>'),
+        icon: icon(
+          '<path d="M2.5 13.5h11M4.5 13.5V8M8 13.5V4.5M11.5 13.5V6.5"/>'
+        ),
         tip: '打开图表弹窗，配置柱状图/折线图/饼图后以图片插入',
         toast: '已打开图表弹窗',
         onClick: () => {
@@ -529,6 +545,22 @@ const toolbarGroups: IToolbarGroup[] = [
         toast: '已插入贪吃蛇，点击游戏区开始',
         onClick: () => {
           command.executeSnake()
+        }
+      },
+      {
+        label: '打字挑战',
+        icon: icon(
+          '<rect x="1.8" y="4.2" width="12.4" height="7.6" rx="1.6"/>' +
+            '<path d="M4.4 9.6h7.2"/>' +
+            '<circle cx="4.6" cy="6.6" r="0.55" fill="currentColor" stroke="none"/>' +
+            '<circle cx="7" cy="6.6" r="0.55" fill="currentColor" stroke="none"/>' +
+            '<circle cx="9.4" cy="6.6" r="0.55" fill="currentColor" stroke="none"/>' +
+            '<circle cx="11.8" cy="6.6" r="0.55" fill="currentColor" stroke="none"/>'
+        ),
+        tip: '在光标处插入打字挑战，照范文输入，判定行逐字符变色打分',
+        toast: '已插入打字挑战，光标已就位，直接开打',
+        onClick: () => {
+          command.executeTyping()
         }
       }
     ]

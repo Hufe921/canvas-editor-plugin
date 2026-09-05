@@ -74,4 +74,7 @@ features:
   - title: 贪吃蛇
     details: 在文档里玩贪吃蛇，成绩实时同步到文档
     link: /plugins/snake
+  - title: 打字挑战
+    details: 照范文打字，判定行逐字符变色并实时统计成绩
+    link: /plugins/typing
 ---

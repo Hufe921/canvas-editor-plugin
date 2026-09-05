@@ -339,3 +339,22 @@ instance.command.executeSnake({ width?, height?, speed? }) // 光标处插入可
 ```
 
 游戏嵌在文档正文文字流中，得分与用时通过文本控件实时同步到文档。
+
+- @hufe921/canvas-editor-plugin-typing
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import typingPlugin from '@hufe921/canvas-editor-plugin-typing'
+
+const instance = new Editor()
+instance.use(typingPlugin, {
+  passages: string[], // 闯关题目（每项一关），由外部传入
+  locale?: string, // 界面语言（内置 zhCN、en）
+  lang?: object, // 覆盖对应语言的界面文案
+  onFinished?: (result: { duration: number; speed: number; accuracy: number; total: number; correct: number; level: number; levelCount: number }) => void
+})
+
+instance.command.executeTyping({ passages?, text? }) // 文档末尾插入打字挑战闯关，光标自动落在输入行
+```
+
+闯关题目完全由外部传入，打完一关自动追加下一关，全部结束后追加总成绩行；判定行逐字符变绿 / 变红，用时、速度、正确率实时刷新，纯富文本能力驱动（无 iframe），内置中英文界面文案。

@@ -54,7 +54,8 @@ export default defineConfig({
                 { text: '输入联想', link: '/plugins/suggestion' },
                 { text: '图表', link: '/plugins/chart' },
                 { text: '公式', link: '/plugins/formula' },
-                { text: '贪吃蛇', link: '/plugins/snake' }
+                { text: '贪吃蛇', link: '/plugins/snake' },
+                { text: '打字挑战', link: '/plugins/typing' }
               ]
             }
           ]
@@ -159,6 +160,10 @@ export default defineConfig({
                 {
                   text: 'Snake',
                   link: '/en/plugins/snake'
+                },
+                {
+                  text: 'Typing Challenge',
+                  link: '/en/plugins/typing'
                 }
               ]
             }
