@@ -16,6 +16,7 @@ import markdownPlugin from '@hufe921/canvas-editor-plugin-markdown'
 import menstrualHistoryPlugin from '@hufe921/canvas-editor-plugin-menstrual-history'
 import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
 import signaturePlugin from '@hufe921/canvas-editor-plugin-signature'
+import snakePlugin from '@hufe921/canvas-editor-plugin-snake'
 import specialCharactersPlugin from '@hufe921/canvas-editor-plugin-special-characters'
 import spellcheckPlugin from '@hufe921/canvas-editor-plugin-spellcheck'
 import suggestionPlugin from '@hufe921/canvas-editor-plugin-suggestion'
@@ -90,6 +91,11 @@ instance.use(mentionPlugin, {
   }
 })
 instance.use(signaturePlugin)
+instance.use(snakePlugin, {
+  onGameOver: result => {
+    console.log('snake game over:', result)
+  }
+})
 instance.use(specialCharactersPlugin)
 instance.use(spellcheckPlugin, {
   suggestionCount: 5,
@@ -506,6 +512,26 @@ const toolbarGroups: IToolbarGroup[] = [
         }
       }
     ]
+  },
+  {
+    name: '游戏',
+    buttons: [
+      {
+        label: '贪吃蛇',
+        icon: icon(
+          '<path d="M2.5 11.5c2.5 0 2.5-3 5-3s2.5-3 5-3"/>' +
+            '<circle cx="13.2" cy="5.5" r="1.6"/>' +
+            '<circle cx="13.5" cy="5.2" r="0.5" fill="currentColor" stroke="none"/>' +
+            '<circle cx="13.2" cy="12" r="1.5"/>' +
+            '<path d="M13.4 10.3l.6-1"/>'
+        ),
+        tip: '在光标处插入可玩的贪吃蛇游戏，成绩实时同步到文档',
+        toast: '已插入贪吃蛇，点击游戏区开始',
+        onClick: () => {
+          command.executeSnake()
+        }
+      }
+    ]
   }
 ]
 
@@ -559,3 +585,4 @@ toolbarGroups.forEach(group => {
   })
   sidebar.appendChild(groupEl)
 })
+;(window as any).editor = instance

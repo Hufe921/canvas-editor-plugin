@@ -39,6 +39,7 @@
     "@hufe921/canvas-editor-plugin-menstrual-history": "workspace:*",
     "@hufe921/canvas-editor-plugin-mention": "workspace:*",
     "@hufe921/canvas-editor-plugin-signature": "workspace:*",
+    "@hufe921/canvas-editor-plugin-snake": "workspace:*",
     "@hufe921/canvas-editor-plugin-special-characters": "workspace:*",
     "@hufe921/canvas-editor-plugin-spellcheck": "workspace:*",
     "@hufe921/canvas-editor-plugin-suggestion": "workspace:*",

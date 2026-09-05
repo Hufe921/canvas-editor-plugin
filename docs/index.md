@@ -68,4 +68,10 @@ features:
   - title: 图表
     details: ECharts 图表插入
     link: /plugins/chart
+  - title: 公式
+    details: LaTeX 公式插入（KaTeX 渲染）
+    link: /plugins/formula
+  - title: 贪吃蛇
+    details: 在文档里玩贪吃蛇，成绩实时同步到文档
+    link: /plugins/snake
 ---

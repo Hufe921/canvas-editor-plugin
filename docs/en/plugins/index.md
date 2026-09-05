@@ -23,3 +23,4 @@ This plugin library includes the following plugins:
 | [suggestion](./suggestion)                 | Suggestion                  |
 | [chart](./chart)                           | Chart                       |
 | [formula](./formula)                       | LaTeX Formula               |
+| [snake](./snake)                           | Snake Game                  |

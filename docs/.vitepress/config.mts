@@ -53,7 +53,8 @@ export default defineConfig({
                 { text: '批注', link: '/plugins/comment' },
                 { text: '输入联想', link: '/plugins/suggestion' },
                 { text: '图表', link: '/plugins/chart' },
-                { text: '公式', link: '/plugins/formula' }
+                { text: '公式', link: '/plugins/formula' },
+                { text: '贪吃蛇', link: '/plugins/snake' }
               ]
             }
           ]
@@ -154,6 +155,10 @@ export default defineConfig({
                 {
                   text: 'Formula',
                   link: '/en/plugins/formula'
+                },
+                {
+                  text: 'Snake',
+                  link: '/en/plugins/snake'
                 }
               ]
             }

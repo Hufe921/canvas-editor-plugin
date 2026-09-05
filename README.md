@@ -319,3 +319,23 @@ instance.use(suggestionPlugin, {
 
 instance.command.executeSuggestion() // 程序化唤起候选浮层
 ```
+
+- @hufe921/canvas-editor-plugin-snake
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import snakePlugin from '@hufe921/canvas-editor-plugin-snake'
+
+const instance = new Editor()
+instance.use(snakePlugin, {
+  width?: number,      // 游戏区宽度，默认 600
+  height?: number,     // 游戏区高度，默认 400
+  speed?: number,      // 蛇移动间隔 ms，默认 150，越小越快
+  theme?: object,      // 蛇 / 食物 / 背景配色
+  onGameOver?: (result: { score: number; duration: number }) => void
+})
+
+instance.command.executeSnake({ width?, height?, speed? }) // 光标处插入可玩贪吃蛇
+```
+
+游戏嵌在文档正文文字流中，得分与用时通过文本控件实时同步到文档。

@@ -68,4 +68,10 @@ features:
   - title: Chart
     details: ECharts Chart Insertion
     link: /en/plugins/chart
+  - title: Formula
+    details: LaTeX Formula Insertion (KaTeX Rendering)
+    link: /en/plugins/formula
+  - title: Snake
+    details: Play Snake inside your document, score synced in real time
+    link: /en/plugins/snake
 ---
