@@ -25,3 +25,4 @@ This plugin library includes the following plugins:
 | [formula](./formula)                       | LaTeX Formula               |
 | [snake](./snake)                           | Snake Game                  |
 | [typing](./typing)                         | Typing Challenge Game       |
+| [autosave](./autosave)                     | Autosave                    |

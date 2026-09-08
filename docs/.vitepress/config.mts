@@ -55,7 +55,8 @@ export default defineConfig({
                 { text: '图表', link: '/plugins/chart' },
                 { text: '公式', link: '/plugins/formula' },
                 { text: '贪吃蛇', link: '/plugins/snake' },
-                { text: '打字挑战', link: '/plugins/typing' }
+                { text: '打字挑战', link: '/plugins/typing' },
+                { text: '自动保存', link: '/plugins/autosave' }
               ]
             }
           ]
@@ -164,6 +165,10 @@ export default defineConfig({
                 {
                   text: 'Typing Challenge',
                   link: '/en/plugins/typing'
+                },
+                {
+                  text: 'Autosave',
+                  link: '/en/plugins/autosave'
                 }
               ]
             }
