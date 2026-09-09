@@ -77,4 +77,10 @@ features:
   - title: 打字挑战
     details: 照范文打字，判定行逐字符变色并实时统计成绩
     link: /plugins/typing
+  - title: 自动保存
+    details: 文档自动保存到本地，刷新或意外关闭后自动还原
+    link: /plugins/autosave
+  - title: 目录
+    details: 标题大纲目录，点击定位，滚动与光标联动高亮章节
+    link: /plugins/catalog
 ---

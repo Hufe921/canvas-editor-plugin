@@ -77,4 +77,10 @@ features:
   - title: Typing Challenge
     details: Type along the passage, per-character feedback with live stats
     link: /en/plugins/typing
+  - title: Autosave
+    details: Autosave the document locally and restore it after a refresh or crash
+    link: /en/plugins/autosave
+  - title: Catalog
+    details: Heading outline with click-to-locate, scroll and cursor sync highlighting
+    link: /en/plugins/catalog
 ---
