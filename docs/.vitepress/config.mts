@@ -56,7 +56,8 @@ export default defineConfig({
                 { text: '公式', link: '/plugins/formula' },
                 { text: '贪吃蛇', link: '/plugins/snake' },
                 { text: '打字挑战', link: '/plugins/typing' },
-                { text: '自动保存', link: '/plugins/autosave' }
+                { text: '自动保存', link: '/plugins/autosave' },
+                { text: '目录', link: '/plugins/catalog' }
               ]
             }
           ]
@@ -169,6 +170,10 @@ export default defineConfig({
                 {
                   text: 'Autosave',
                   link: '/en/plugins/autosave'
+                },
+                {
+                  text: 'Catalog',
+                  link: '/en/plugins/catalog'
                 }
               ]
             }

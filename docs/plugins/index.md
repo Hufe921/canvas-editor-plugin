@@ -26,3 +26,4 @@
 | [snake](./snake)                           | 贪吃蛇游戏        |
 | [typing](./typing)                         | 打字挑战游戏      |
 | [autosave](./autosave)                     | 自动保存          |
+| [catalog](./catalog)                       | 目录              |

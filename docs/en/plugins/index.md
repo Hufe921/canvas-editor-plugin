@@ -26,3 +26,4 @@ This plugin library includes the following plugins:
 | [snake](./snake)                           | Snake Game                  |
 | [typing](./typing)                         | Typing Challenge Game       |
 | [autosave](./autosave)                     | Autosave                    |
+| [catalog](./catalog)                       | Catalog                     |

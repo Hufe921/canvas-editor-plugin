@@ -372,19 +372,30 @@ instance.use(autosavePlugin, {
   interval?: number, // 定时保存间隔（ms），0 表示关闭，默认 0
   storage?: Storage, // 存储实现，需兼容 Storage 接口，默认 localStorage
   key?: string, // 存储键，默认 'ce-autosave'
-  maxCount?: number, // 最多保留的历史快照份数，超出淘汰最旧的，默认 10
-  snapshotMinInterval?: number, // 历史快照最小间隔（ms），间隔内的连续保存合并为一份，默认 60000
   flushOnUnload?: boolean, // 页面关闭前是否保存未落盘的变更，默认 true
   onSave?: (snapshot: IAutosaveSnapshot) => void,
   onRestore?: (snapshot: IAutosaveSnapshot) => boolean | void, // 返回 false 可取消恢复
   onError?: (error: Error) => void
 })
 
-instance.command.executeAutosave() // 立即保存一份快照
-instance.command.executeAutosaveRestore() // 恢复最近一份快照，返回是否恢复成功
-instance.command.executeAutosaveRestore(2) // 恢复第 3 份快照（按时间倒序）
-instance.command.executeGetAutosaveData() // 获取最近一份快照，无存档时返回 null
-instance.command.executeGetAutosaveList() // 获取全部历史快照（按时间倒序）
+instance.command.executeAutosave() // 立即保存
+instance.command.executeAutosaveRestore() // 恢复存档，返回是否恢复成功
+instance.command.executeGetAutosaveData() // 获取存档数据，无存档时返回 null
 instance.command.executeHasUnsavedChanges() // 是否有未保存的变更
-instance.command.executeAutosaveClear() // 清空全部快照
+instance.command.executeAutosaveClear() // 清空存档
+```
+
+- @hufe921/canvas-editor-plugin-catalog
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import catalogPlugin from '@hufe921/canvas-editor-plugin-catalog'
+
+const instance = new Editor()
+// 传入挂载容器 DOM，目录渲染到该容器内并填满容器
+instance.use(catalogPlugin, {
+  container: HTMLElement, // 必填，挂载容器
+  locale?: string, // 目录语言（内置 zhCN、en），默认取编辑器 locale 配置
+  lang?: object // 覆盖对应语言的目录文案
+})
 ```
