@@ -3,9 +3,11 @@ import exportDocx from './exportDocx'
 import importDocx from './importDocx'
 
 export default function docxPlugin(editor: Editor) {
-  const command = editor.command
   // 导入文档
-  command.executeImportDocx = importDocx(command)
+  editor.command.executeImportDocx = importDocx(editor.command)
   // 导出文档
-  command.executeExportDocx = exportDocx(command)
+  editor.command.executeExportDocx = exportDocx(editor)
 }
+
+export type { IExportDocxOption } from './exportDocx'
+export type { IImportDocxOption } from './importDocx'

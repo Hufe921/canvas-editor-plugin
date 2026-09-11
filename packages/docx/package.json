@@ -2,7 +2,7 @@
   "name": "@hufe921/canvas-editor-plugin-docx",
   "author": "Hufe",
   "license": "MIT",
-  "version": "0.0.6",
+  "version": "1.0.0",
   "description": "docx plugin for canvas-editor",
   "type": "module",
   "publishConfig": {
@@ -36,7 +36,7 @@
     "@hufe921/canvas-editor": ">=0.9.42"
   },
   "devDependencies": {
-    "@hufe921/canvas-editor": "0.9.131",
+    "@hufe921/canvas-editor": "1.0.2",
     "@rollup/plugin-typescript": "^10.0.1",
     "@types/color": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "4.33.0",
@@ -49,6 +49,10 @@
   "dependencies": {
     "color": "^4.2.3",
     "docx": "^8.2.2",
-    "mammoth": "^1.6.0"
-  }
+    "jszip": "^3.7.1"
+  },
+  "bugs": {
+    "url": "https://github.com/Hufe921/canvas-editor-plugin/issues"
+  },
+  "homepage": "https://github.com/Hufe921/canvas-editor-plugin#readme"
 }
