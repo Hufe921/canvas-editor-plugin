@@ -83,4 +83,7 @@ features:
   - title: 目录
     details: 标题大纲目录，点击定位，滚动与光标联动高亮章节
     link: /plugins/catalog
+  - title: 体温单
+    details: 护理规范体温单绘制，体温 / 脉搏曲线与护理数据表格
+    link: /plugins/temperature-chart
 ---

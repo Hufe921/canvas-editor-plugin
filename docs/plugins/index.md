@@ -22,6 +22,7 @@
 | [comment](./comment)                       | 批注              |
 | [suggestion](./suggestion)                 | 输入联想          |
 | [chart](./chart)                           | 图表              |
+| [temperature-chart](./temperature-chart)   | 体温单            |
 | [formula](./formula)                       | LaTeX 公式        |
 | [snake](./snake)                           | 贪吃蛇游戏        |
 | [typing](./typing)                         | 打字挑战游戏      |

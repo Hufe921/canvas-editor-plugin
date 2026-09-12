@@ -83,4 +83,7 @@ features:
   - title: Catalog
     details: Heading outline with click-to-locate, scroll and cursor sync highlighting
     link: /en/plugins/catalog
+  - title: Temperature Chart
+    details: Nursing-standard temperature sheet with vital sign curves and nursing data table
+    link: /en/plugins/temperature-chart
 ---

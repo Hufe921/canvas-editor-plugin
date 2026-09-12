@@ -21,6 +21,7 @@ import typingPlugin from '@hufe921/canvas-editor-plugin-typing'
 import specialCharactersPlugin from '@hufe921/canvas-editor-plugin-special-characters'
 import spellcheckPlugin from '@hufe921/canvas-editor-plugin-spellcheck'
 import suggestionPlugin from '@hufe921/canvas-editor-plugin-suggestion'
+import temperatureChartPlugin from '@hufe921/canvas-editor-plugin-temperature-chart'
 // 以下包的命令类型增强声明未从入口 re-export，需显式引入对应声明文件
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/importDocx'
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/exportDocx'
@@ -115,6 +116,7 @@ instance.use(spellcheckPlugin, {
   suggestionCount: 5,
   ignoreWords: ['canvas-editor']
 })
+instance.use(temperatureChartPlugin)
 instance.use(suggestionPlugin, {
   dataList: [
     { id: '1', name: '患者男性，否认药物过敏史' },
@@ -329,6 +331,20 @@ const toolbarGroups: IToolbarGroup[] = [
               console.log('用户取消了操作')
             }
           })
+        }
+      },
+      {
+        label: '体温单',
+        icon: icon(
+          '<path d="M4.2 2.5v7"/>' +
+            '<circle cx="4.2" cy="11.6" r="1.9"/>' +
+            '<path d="M4.2 9.7v1.9"/>' +
+            '<path d="M8.2 10.5l1.6-2.4 1.6 3 1.7-4.6 1.4 3.4"/>'
+        ),
+        tip: '打开体温单编辑器，按护理规范绘制体温脉搏曲线后以图片插入',
+        toast: '已打开体温单编辑器，双击已插入的体温单可再次编辑',
+        onClick: () => {
+          command.executeTemperatureChart()
         }
       },
       {

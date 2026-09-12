@@ -1,0 +1,508 @@
+.ce-temperature-chart-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .5;
+  background: #000000;
+  z-index: 99;
+}
+
+.ce-temperature-chart-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ce-temperature-chart-dialog {
+  width: 1240px;
+  max-width: 96%;
+  max-height: 94%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  box-shadow: 0 2px 12px 0 rgb(56 56 56 / 20%);
+  border: 1px solid #e2e6ed;
+  border-radius: 2px;
+}
+
+.ce-temperature-chart-header {
+  height: 40px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e6ed;
+}
+
+.ce-temperature-chart-tabs {
+  display: flex;
+  height: 100%;
+}
+
+.ce-temperature-chart-tab {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666666;
+  border-bottom: 2px solid transparent;
+
+  &.active {
+    color: #347ef2;
+    border-bottom-color: #347ef2;
+  }
+}
+
+.ce-temperature-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.ce-temperature-chart-close {
+  cursor: pointer;
+  font-size: 18px;
+  font-style: normal;
+  color: #999999;
+
+  &:hover {
+    color: #333333;
+  }
+}
+
+// 正文：左侧固定宽度配置列 + 右侧自适应预览区
+.ce-temperature-chart-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+  padding: 12px 15px;
+  overflow: hidden;
+}
+
+.ce-temperature-chart-config {
+  width: 480px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.ce-temperature-chart-section-title {
+  margin: 4px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    margin-right: 6px;
+    vertical-align: -1px;
+    background: #347ef2;
+  }
+}
+
+.ce-temperature-chart-day-hint {
+  margin-left: 8px;
+  font-weight: normal;
+  font-size: 12px;
+  color: #999999;
+}
+
+.ce-temperature-chart-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+}
+
+.ce-temperature-chart-form-item {
+  display: flex;
+  align-items: center;
+
+  >span {
+    flex-shrink: 0;
+    margin-right: 6px;
+    font-size: 13px;
+    color: #333333;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    outline: none;
+    font-size: 13px;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #347ef2;
+    }
+  }
+}
+
+.ce-temperature-chart-vitals {
+  margin-top: 14px;
+}
+
+// 天切换标签：数字 + 有数据圆点
+.ce-temperature-chart-day-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ce-temperature-chart-day-tab {
+  position: relative;
+  min-width: 32px;
+  height: 26px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dcdfe6;
+  border-radius: 2px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666666;
+  user-select: none;
+
+  &:hover {
+    color: #347ef2;
+    border-color: #347ef2;
+  }
+
+  &.active {
+    color: #ffffff;
+    background: #347ef2;
+    border-color: #347ef2;
+  }
+
+  &.has-data::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #347ef2;
+  }
+
+  &.active.has-data::after {
+    background: #ffffff;
+  }
+}
+
+.ce-temperature-chart-day-tab-add,
+.ce-temperature-chart-day-tab-remove {
+  color: #999999;
+  font-size: 14px;
+}
+
+// 当日生命体征表：行 = 指标，列 = 6 个时间档
+.ce-temperature-chart-vitals-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid #dcdfe6;
+    font-size: 12px;
+    font-weight: normal;
+    color: #333333;
+    text-align: center;
+    padding: 2px;
+  }
+
+  th {
+    height: 26px;
+    background: #f5f7fa;
+  }
+
+  td.ce-temperature-chart-indicator-cell {
+    width: 72px;
+    background: #fafbfc;
+    color: #666666;
+  }
+
+  input {
+    width: 100%;
+    height: 26px;
+    padding: 0 4px;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 12px;
+    box-sizing: border-box;
+
+    &:focus {
+      background: #f0f6ff;
+    }
+  }
+}
+
+.ce-temperature-chart-events {
+  margin-top: 14px;
+}
+
+// 事件标注行：天 + 时间档 + 事件名 + 时间 + 删除
+.ce-temperature-chart-event-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-temperature-chart-event-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  select,
+  input {
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    outline: none;
+    font-size: 12px;
+    color: #333333;
+    background: #ffffff;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #347ef2;
+    }
+  }
+
+  select {
+    flex-shrink: 0;
+    width: 68px;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ce-temperature-chart-event-remove {
+    flex-shrink: 0;
+    cursor: pointer;
+    font-size: 16px;
+    font-style: normal;
+    color: #999999;
+
+    &:hover {
+      color: #f56c6c;
+    }
+  }
+}
+
+.ce-temperature-chart-event-add {
+  margin-top: 8px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 2px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666666;
+
+  &:hover {
+    color: #347ef2;
+    border-color: #347ef2;
+  }
+}
+
+.ce-temperature-chart-bottom-data {
+  margin-top: 14px;
+}
+
+.ce-temperature-chart-advanced {
+  textarea {
+    width: 100%;
+    height: 480px;
+    padding: 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    outline: none;
+    resize: none;
+    font-family: monospace;
+    font-size: 13px;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #347ef2;
+    }
+  }
+}
+
+.ce-temperature-chart-json-error {
+  display: none;
+  margin-top: 6px;
+  color: #f56c6c;
+  font-size: 12px;
+}
+
+// 预览区：工具栏 + 可滚动缩放视图
+.ce-temperature-chart-preview {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px dashed #e2e6ed;
+  overflow: hidden;
+}
+
+.ce-temperature-chart-preview-toolbar {
+  height: 34px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-bottom: 1px dashed #e2e6ed;
+
+  button {
+    height: 24px;
+    min-width: 28px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666666;
+
+    &:hover {
+      color: #347ef2;
+      border-color: #347ef2;
+    }
+  }
+}
+
+.ce-temperature-chart-preview-zoom {
+  margin-left: 8px;
+  min-width: 52px;
+  font-size: 12px;
+  color: #999999;
+  text-align: right;
+}
+
+.ce-temperature-chart-preview-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  img {
+    width: 100%;
+    height: auto;
+    flex-shrink: 0;
+    // auto 边距：小于容器时居中，溢出时左对齐可滚动到左缘
+    margin-inline: auto;
+  }
+}
+
+.ce-temperature-chart-preview-error {
+  display: none;
+  color: #f56c6c;
+  font-size: 13px;
+}
+
+.ce-temperature-chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 15px;
+  border-top: 1px solid #e2e6ed;
+
+  .ce-temperature-chart-orientation {
+    display: flex;
+    gap: 0;
+    margin-right: auto;
+
+    button {
+      height: 28px;
+      padding: 0 12px;
+      border: 1px solid #dcdfe6;
+      border-radius: 0;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666666;
+
+      &:first-child {
+        border-radius: 2px 0 0 2px;
+      }
+
+      &:last-child {
+        border-radius: 0 2px 2px 0;
+        margin-left: -1px;
+      }
+
+      &:hover {
+        color: #347ef2;
+        border-color: #347ef2;
+        position: relative;
+        z-index: 1;
+      }
+
+      &.active {
+        color: #ffffff;
+        background: #347ef2;
+        border-color: #347ef2;
+        position: relative;
+        z-index: 2;
+      }
+    }
+  }
+
+  button {
+    height: 30px;
+    padding: 0 16px;
+    border: 1px solid #dcdfe6;
+    border-radius: 2px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      color: #347ef2;
+      border-color: #347ef2;
+    }
+  }
+
+  .ce-temperature-chart-insert {
+    color: #ffffff;
+    background: #347ef2;
+    border-color: #347ef2;
+
+    &:hover {
+      // 覆盖通用 button:hover 的文字变色，避免蓝底蓝字
+      color: #ffffff;
+      opacity: .9;
+    }
+  }
+}

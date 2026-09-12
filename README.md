@@ -399,3 +399,24 @@ instance.use(catalogPlugin, {
   lang?: object // 覆盖对应语言的目录文案
 })
 ```
+
+- @hufe921/canvas-editor-plugin-temperature-chart
+
+```javascript
+import Editor from '@hufe921/canvas-editor'
+import temperatureChartPlugin from '@hufe921/canvas-editor-plugin-temperature-chart'
+
+const instance = new Editor()
+instance.use(temperatureChartPlugin, {
+  locale?: string, // 弹窗语言（内置 zhCN、en）
+  lang?: object // 覆盖对应语言的弹窗文案
+})
+
+instance.command.executeTemperatureChart({
+  width?: number, // 插入图片宽度，默认 760
+  defaultData?: object, // 预填的体温单数据（直接进入高级模式）
+  onInsert?: (data: object) => void
+})
+```
+
+按护理通行规范绘制体温单（体温 / 脉搏 / 心率曲线、物理降温红圈红虚线、体温不升箭头、40-42℃ 事件红字、呼吸数字行、疼痛评分区、底部护理数据表格），模板 / 高级双模式编辑、实时预览、以图片插入文档，双击或右键已插入的体温单可二次编辑。
