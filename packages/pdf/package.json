@@ -1,0 +1,51 @@
+{
+  "name": "@hufe921/canvas-editor-plugin-pdf",
+  "author": "Hufe",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "pdf plugin for canvas-editor",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "typings": "./dist/src/pdf/index.d.ts",
+  "main": "./dist/pdf.umd.cjs",
+  "module": "./dist/pdf.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hufe921/canvas-editor-plugin.git"
+  },
+  "keywords": [
+    "canvas-editor",
+    "pdf"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --mode lib",
+    "release": "node scripts/release.js",
+    "type:check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hufe921/canvas-editor": ">=0.9.42"
+  },
+  "devDependencies": {
+    "@hufe921/canvas-editor": "0.9.131",
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "simple-git-hooks": "^2.8.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.1"
+  }
+}
