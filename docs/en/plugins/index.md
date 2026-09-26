@@ -8,6 +8,7 @@ This plugin library includes the following plugins:
 | [barcode2d](./barcode2d)                   | 2D Barcode Generation       |
 | [codeblock](./codeblock)                   | Code Block Highlighting     |
 | [docx](./docx)                             | DOCX Import/Export          |
+| [ofd](./ofd)                               | OFD Import/Export           |
 | [excel](./excel)                           | Excel Import                |
 | [floating-toolbar](./floating-toolbar)     | Floating Toolbar            |
 | [diagram](./diagram)                       | Diagram Drawing             |

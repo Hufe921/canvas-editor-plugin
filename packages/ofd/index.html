@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>canvas-editor-plugin-ofd</title>
+  <style>
+    #file-ofd {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <button id="export-ofd">导出OFD</button>
+    <button id="import-ofd">导入OFD</button>
+    <input type="file" name="file-ofd" id="file-ofd" accept=".ofd" />
+    <div id="editor"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

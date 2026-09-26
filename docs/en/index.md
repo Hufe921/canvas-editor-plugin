@@ -26,6 +26,9 @@ features:
   - title: DOCX
     details: DOCX Import/Export
     link: /en/plugins/docx
+  - title: OFD
+    details: OFD Import/Export (GB/T 33190, embedded fonts)
+    link: /en/plugins/ofd
   - title: Excel
     details: Excel Import
     link: /en/plugins/excel

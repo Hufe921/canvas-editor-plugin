@@ -8,6 +8,7 @@
 | [barcode2d](./barcode2d)                   | 二维条形码生成    |
 | [codeblock](./codeblock)                   | 代码块高亮        |
 | [docx](./docx)                             | DOCX 文件导入导出 |
+| [ofd](./ofd)                               | OFD 版式文档导入导出 |
 | [excel](./excel)                           | Excel 文件导入    |
 | [floating-toolbar](./floating-toolbar)     | 浮动工具栏        |
 | [diagram](./diagram)                       | 图表绘制          |

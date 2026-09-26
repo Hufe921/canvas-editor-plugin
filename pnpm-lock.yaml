@@ -83,6 +83,9 @@ importers:
       '@hufe921/canvas-editor-plugin-mention':
         specifier: workspace:*
         version: link:../packages/mention
+      '@hufe921/canvas-editor-plugin-ofd':
+        specifier: workspace:*
+        version: link:../packages/ofd
       '@hufe921/canvas-editor-plugin-signature':
         specifier: workspace:*
         version: link:../packages/signature
@@ -698,6 +701,40 @@ importers:
       vite-plugin-css-injected-by-js:
         specifier: ^3.3.0
         version: 3.5.2(vite@4.5.14(@types/node@20.19.41)(sass@1.99.0))
+
+  packages/ofd:
+    dependencies:
+      '@hufe921/jsofd':
+        specifier: ^1.0.1
+        version: 1.0.1
+      jszip:
+        specifier: ^3.7.1
+        version: 3.10.1
+    devDependencies:
+      '@hufe921/canvas-editor':
+        specifier: 1.0.2
+        version: 1.0.2
+      '@rollup/plugin-typescript':
+        specifier: ^10.0.1
+        version: 10.0.1(rollup@3.30.0)(tslib@2.8.1)(typescript@5.9.3)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 4.33.0
+        version: 4.33.0(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@5.9.3))(eslint@7.32.0)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 4.33.0
+        version: 4.33.0(eslint@7.32.0)(typescript@5.9.3)
+      eslint:
+        specifier: 7.32.0
+        version: 7.32.0
+      simple-git-hooks:
+        specifier: ^2.8.1
+        version: 2.13.1
+      typescript:
+        specifier: ^5.0.2
+        version: 5.9.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.5.14(@types/node@20.19.41)(sass@1.99.0)
 
   packages/signature:
     devDependencies:
@@ -1383,6 +1420,15 @@ packages:
 
   '@hufe921/canvas-editor@1.0.2':
     resolution: {integrity: sha512-uAdI70JPqakd9+8TmSO1Fv77xDG86vCXaAVfqwMChJnAiz9Ub77l2ep0t8/lnydoIjdFqywcs+dea7x2f9vNEg==}
+
+  '@hufe921/jsofd@1.0.1':
+    resolution: {integrity: sha512-ZA0m/3AKWJfHkcks+P4F/P6wO9D2LXH3GTbOck3bs8DGbeu+eOq88ldHA4q9qNYo+nw7szJffzu/r53pxWV/ZA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      pdfjs-dist: '>=3.0.0'
+    peerDependenciesMeta:
+      pdfjs-dist:
+        optional: true
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -5353,6 +5399,8 @@ snapshots:
   '@hufe921/canvas-editor@0.9.88': {}
 
   '@hufe921/canvas-editor@1.0.2': {}
+
+  '@hufe921/jsofd@1.0.1': {}
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:

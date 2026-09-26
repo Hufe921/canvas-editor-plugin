@@ -26,6 +26,9 @@ features:
   - title: DOCX 导入导出
     details: DOCX 文件导入导出
     link: /plugins/docx
+  - title: OFD 导入导出
+    details: OFD 版式文档导入导出（GB/T 33190，嵌入字体）
+    link: /plugins/ofd
   - title: Excel 导入
     details: Excel 文件导入
     link: /plugins/excel

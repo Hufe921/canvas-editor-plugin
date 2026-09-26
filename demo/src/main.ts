@@ -15,6 +15,7 @@ import formulaPlugin from '@hufe921/canvas-editor-plugin-formula'
 import markdownPlugin from '@hufe921/canvas-editor-plugin-markdown'
 import menstrualHistoryPlugin from '@hufe921/canvas-editor-plugin-menstrual-history'
 import mentionPlugin from '@hufe921/canvas-editor-plugin-mention'
+import ofdPlugin, { prefetchOfdFonts } from '@hufe921/canvas-editor-plugin-ofd'
 import signaturePlugin from '@hufe921/canvas-editor-plugin-signature'
 import snakePlugin from '@hufe921/canvas-editor-plugin-snake'
 import typingPlugin from '@hufe921/canvas-editor-plugin-typing'
@@ -25,6 +26,8 @@ import temperatureChartPlugin from '@hufe921/canvas-editor-plugin-temperature-ch
 // 以下包的命令类型增强声明未从入口 re-export，需显式引入对应声明文件
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/importDocx'
 import type {} from '@hufe921/canvas-editor-plugin-docx/dist/src/docx/exportDocx'
+import type {} from '@hufe921/canvas-editor-plugin-ofd/dist/src/ofd/importOfd'
+import type {} from '@hufe921/canvas-editor-plugin-ofd/dist/src/ofd/exportOfd'
 import type {} from '@hufe921/canvas-editor-plugin-excel/dist/src/excel/importExcel'
 import type {} from '@hufe921/canvas-editor-plugin-markdown/dist/src/markdown/exportMarkdown'
 
@@ -91,6 +94,14 @@ instance.use(mentionPlugin, {
   onClick: element => {
     console.log('mention click:', element)
   }
+})
+instance.use(ofdPlugin)
+// OFD 导出字体按需懒加载（首屏零请求）；页面 load 完成且延迟 3 秒后
+// 再后台预取，避免与首屏资源竞争带宽，同时消除首次导出的下载等待
+window.addEventListener('load', () => {
+  window.setTimeout(() => {
+    prefetchOfdFonts('/canvas-editor-plugin-demo/fonts/').catch(() => {})
+  }, 3000)
 })
 instance.use(signaturePlugin)
 instance.use(snakePlugin, {
@@ -169,6 +180,19 @@ excelFileInput.onchange = () => {
     excelFileInput.value = ''
   }
   reader.readAsArrayBuffer(file)
+}
+
+// OFD 导入（.ofd 文件，导出嵌入字体使用 demo 部署的 Noto 字体）
+const ofdFileInput = document.querySelector<HTMLInputElement>('#file-ofd')!
+ofdFileInput.onchange = () => {
+  const file = ofdFileInput.files?.[0]
+  if (!file) return
+  file.arrayBuffer().then(buffer => {
+    command.executeImportOfd({
+      arrayBuffer: buffer
+    })
+    ofdFileInput.value = ''
+  })
 }
 
 // 极简 stroke 风格内联 SVG 图标（16px）
@@ -424,6 +448,31 @@ const toolbarGroups: IToolbarGroup[] = [
         toast: '请选择 .docx 文件',
         onClick: () => {
           docxFileInput.click()
+        }
+      },
+      {
+        label: '导出 OFD',
+        icon: icon(
+          '<path d="M3 2.5h7.5L13 5v8.5H3zM10.5 2.5V5H13M5.5 8h5M5.5 10.5h5"/>'
+        ),
+        tip: '将当前文档导出为 OFD 版式文件（GB/T 33190，嵌入字体）',
+        toast: '已导出 canvas-editor.ofd',
+        onClick: () => {
+          command.executeExportOfd({
+            fileName: 'canvas-editor',
+            fontBaseUrl: '/canvas-editor-plugin-demo/fonts/'
+          })
+        }
+      },
+      {
+        label: '导入 OFD',
+        icon: icon(
+          '<path d="M3 2.5h7.5L13 5v8.5H3zM10.5 2.5V5H13M5.5 8.5l1.6 1.6L10.5 6.7"/>'
+        ),
+        tip: '选择 .ofd 文件导入为文档内容',
+        toast: '请选择 .ofd 文件',
+        onClick: () => {
+          ofdFileInput.click()
         }
       },
       {
