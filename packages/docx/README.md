@@ -19,7 +19,17 @@ command.executeImportDocx({
   arrayBuffer: buffer
 })
 
-instance.executeExportDocx({
+instance.command.executeExportDocx({
   fileName: string
+})
+```
+
+The export always returns a Blob. By default it also downloads the file. Set
+`download: false` to let the application upload, preview or download it itself:
+
+```javascript
+const blob = await instance.command.executeExportDocx({
+  fileName: 'manuscript',
+  download: false
 })
 ```

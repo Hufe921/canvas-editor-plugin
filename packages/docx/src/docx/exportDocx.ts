@@ -781,6 +781,8 @@ function buildParagraphSpacing(element: IElement) {
 
 export interface IExportDocxOption {
   fileName: string
+  // Set false to return the Blob without starting a browser download.
+  download?: boolean
   // 是否在文档开头插入目录（Word 中更新域后生成，依赖标题样式）
   toc?: boolean
 }
@@ -794,7 +796,7 @@ declare module '@hufe921/canvas-editor' {
 export default function (editor: Editor) {
   return async function (options: IExportDocxOption): Promise<Blob> {
     checkboxIndexByControlId.clear()
-    const { fileName, toc } = options
+    const { fileName, toc, download = true } = options
     const {
       data: { header, main, footer },
       options: editorOptions
@@ -913,7 +915,7 @@ export default function (editor: Editor) {
     })
 
     const blob = await Packer.toBlob(doc)
-    saveAs(blob, `${fileName}.docx`)
+    if (download) saveAs(blob, `${fileName}.docx`)
     return blob
   }
 }
