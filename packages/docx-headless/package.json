@@ -1,0 +1,33 @@
+{
+  "name": "@hufe921/canvas-editor-plugin-docx-headless",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Bounded headless Word exchange with native review records and no browser side effects",
+  "private": true,
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src",
+    "src",
+    "LICENSE",
+    "README.md",
+    "PROVENANCE.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "saxes": "6.0.0",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "20.19.41",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1"
+  }
+}
