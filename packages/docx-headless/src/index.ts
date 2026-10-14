@@ -9,5 +9,6 @@ export * from './sections'
 
 export * from './stories'
 export * from './styles'
+export * from './fonts'
 
 export { documentSchema } from './validation'

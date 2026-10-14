@@ -1,4 +1,5 @@
 import {documentTheme} from './theme'
+import { readEmbeddedFonts, type WordEmbeddedFont } from './fonts'
 import { readBorders, readShading, readTablePresentation, readCellPresentation } from './appearance'
 import { validateStyles,importedStyleId,type WordStyleDefinitions } from './styles'
 import { randomUUID } from 'node:crypto'
@@ -49,11 +50,12 @@ export interface DocxIncomingAsset {
   height: number;
 }
 export interface DocxSection { start: number; end: number; breakAfter?: 'continuous' | 'nextPage'; document: WordDocument; stories?: {header?:WordDocument;footer?:WordDocument} }
-export interface DocxConversion { document:WordDocument; sections: DocxSection[]; styleDefinitions:WordStyleDefinitions; assets:DocxIncomingAsset[]; losses:Array<{code:string;count:number;message:string}>; detected:Array<{feature:string;count:number}> }
+export interface DocxConversion { document:WordDocument; sections: DocxSection[]; styleDefinitions:WordStyleDefinitions; fonts:WordEmbeddedFont[]; assets:DocxIncomingAsset[]; losses:Array<{code:string;count:number;message:string}>; detected:Array<{feature:string;count:number}> }
 /** Authoritative bounded conversion reads only validated local package parts.
  * No browser ZIP loader, network fetch, scripts, fields or external images run. */
 export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   const files = await validateDocxPackage(bytes)
+  const fonts = readEmbeddedFonts(files)
   const xml = parseDocumentXml(files.get('word/document.xml')!)
   const body = xml.getElementsByTagNameNS(w, 'body').item(0)
   if (!body)
@@ -86,14 +88,13 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     pict: 'Legacy VML drawings are retained only in the preserved original.',
     altChunk: 'Embedded alternative-content parts cannot be safely converted.',
   }
-  const fontParts = Array.from(files.keys()).filter(name => name.startsWith('word/fonts/'))
-  if (fontParts.length) lose('EMBEDDED_FONTS', 'Embedded font binary parts require application-approved font handling; they remain in the preserved source package.', fontParts.length)
+  if (fonts.length) detected.push({feature:'embeddedFontsRequireApproval',count:fonts.length})
   const unsupportedCounts=new Map<string,number>()
   // Do not turn a tolerated source-package defect into a claim of OOXML fidelity.
   const paragraphOrder = ['pStyle','keepNext','keepLines','pageBreakBefore','framePr','widowControl','numPr','suppressLineNumbers','pBdr','shd','tabs','suppressAutoHyphens','kinsoku','wordWrap','overflowPunct','topLinePunct','autoSpaceDE','autoSpaceDN','bidi','adjustRightInd','snapToGrid','spacing','ind','contextualSpacing','mirrorIndents','suppressOverlap','jc','textDirection','textAlignment','textboxTightWrap','outlineLvl','divId','cnfStyle','rPr','sectPr','pPrChange']
   for (const [name, content] of files) if (name.startsWith('word/') && name.endsWith('.xml')) {
     const part = parseDocumentXml(content)
-    for(const name of Object.keys(unsupported)){const count=part.getElementsByTagNameNS(w,name).length;if(count)unsupportedCounts.set(name,(unsupportedCounts.get(name)??0)+count)}
+    for(const name of Object.keys(unsupported)){const count=Array.from(part.getElementsByTagNameNS(w,name)).filter(element=>!['bidi','rtl','titlePg','evenAndOddHeaders'].includes(name)||!['0','false','off'].includes(val(element)??'')).length;if(count)unsupportedCounts.set(name,(unsupportedCounts.get(name)??0)+count)}
     for (const properties of Array.from(part.getElementsByTagNameNS(w, 'trPr'))) if (child(properties, 'trHeight')) lose('SOURCE_ROW_HEIGHT', 'Fixed or minimum row height requires explicit conversion handling.')
     for (const columns of Array.from(part.getElementsByTagNameNS(w,'cols'))) if (direct(columns,'col').length || columns.getAttributeNS(w,'equalWidth') === '0') lose('UNEQUAL_COLUMN_LAYOUT','Unequal column widths require explicit redesign; equal-width print columns are preserved.')
     for (const kind of ['header','footer']) for (const reference of Array.from(part.getElementsByTagNameNS(w,kind+'Reference'))) if (reference.getAttributeNS(w,'type') && reference.getAttributeNS(w,'type')!=='default') lose('CONDITIONAL_STORY_REFERENCE','First/even-page story variants are retained only in the original; the default story is selected where available.')
@@ -152,9 +153,11 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     const style: TextStyle = {...(resolveReferences&&character?styles.get(character)?.run:{}),...(character?{characterStyleId:character}: {})}
     const fonts=child(node,'rFonts');const font=fonts?.getAttributeNS(w,'ascii')??fonts?.getAttributeNS(w,'hAnsi');const themeFont=fonts?.getAttributeNS(w,'asciiTheme')??fonts?.getAttributeNS(w,'hAnsiTheme')
     if(font)style.font=font;if(themeFont){const resolved=theme.font(themeFont);if(resolved){if(font&&font!==resolved)lose('FONT_THEME_CONFLICT','Source run assigns differing explicit and theme fonts in one property set. Conversion retains the resolved primary theme snapshot; source font association/precedence differences remain in the original and exact cross-application typography is not claimed.');style.font=resolved}}
-    if(fonts&&(fonts.getAttributeNS(w,'eastAsiaTheme')||fonts.getAttributeNS(w,'cstheme')||fonts.getAttributeNS(w,'eastAsia')||fonts.getAttributeNS(w,'cs')||fonts.getAttributeNS(w,'hAnsiTheme')&&themeFont?.replace(/(?:Ascii|HAnsi)$/,'Latin')!==fonts.getAttributeNS(w,'hAnsiTheme')?.replace(/(?:Ascii|HAnsi)$/,'Latin')||fonts.getAttributeNS(w,'hAnsi')&&font!==fonts.getAttributeNS(w,'hAnsi')))lose('MULTISCRIPT_FONT_MAPPING','Separate Latin, East Asian and complex-script font slots are not represented independently; the resolved primary Latin font is retained.')
+    if(fonts&&(fonts.getAttributeNS(w,'eastAsiaTheme')||fonts.getAttributeNS(w,'cstheme')||fonts.getAttributeNS(w,'eastAsia')&&fonts.getAttributeNS(w,'eastAsia')!==font||fonts.getAttributeNS(w,'cs')&&fonts.getAttributeNS(w,'cs')!==font||fonts.getAttributeNS(w,'hAnsiTheme')&&themeFont?.replace(/(?:Ascii|HAnsi)$/,'Latin')!==fonts.getAttributeNS(w,'hAnsiTheme')?.replace(/(?:Ascii|HAnsi)$/,'Latin')||fonts.getAttributeNS(w,'hAnsi')&&font!==fonts.getAttributeNS(w,'hAnsi')))lose('MULTISCRIPT_FONT_MAPPING','Separate Latin, East Asian and complex-script font slots are not represented independently; the resolved primary Latin font is retained.')
     const size = val(child(node, 'sz'))
     if (size) style.size = number(size) / 1.5
+    const spacing = val(child(node, 'spacing'))
+    if (spacing !== undefined && spacing !== null) style.characterSpacing = number(spacing) / 15
     for (const key of ['bold', 'italic', 'strikeout'] as const) {
       const value = enabled(node, key === 'bold' ? 'b' : key === 'italic' ? 'i' : 'strike')
       if (value !== undefined) style[key] = value
@@ -230,7 +233,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
       const line = val(spacing, 'line')
       if (line) {
         const rule = val(spacing, 'lineRule') ?? 'auto'
-        if (rule === 'auto') style.lineSpacing = number(line) / 240
+        if (rule === 'auto') { style.lineRule = 'auto'; style.lineSpacing = number(line) / 240 }
         else if (rule === 'exact' || rule === 'atLeast') { style.lineRule = rule; style.lineSpacing = number(line) / 15 }
         else lose('SOURCE_LINE_RULE', 'Unknown line-height rule requires explicit conversion handling.')
       }
@@ -265,9 +268,11 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     }
     return style
   }
+  let defaultRunStyle: TextStyle = {}
+  let defaultParagraphStyle: ParagraphStyle = {}
   const stylesPart = files.get('word/styles.xml')
   if (stylesPart) {
-    const root=parseDocumentXml(stylesPart);const defaults=root.getElementsByTagNameNS(w,'docDefaults').item(0);const defaultRun=defaults?readRunStyle(child(child(defaults,'rPrDefault')??defaults,'rPr')):{};const defaultParagraph=defaults?readParagraphStyle(child(child(defaults,'pPrDefault')??defaults,'pPr')):{};styles.set('Normal',{run:defaultRun,paragraph:defaultParagraph})
+    const root=parseDocumentXml(stylesPart);const defaults=root.getElementsByTagNameNS(w,'docDefaults').item(0);const defaultRun=defaults?readRunStyle(child(child(defaults,'rPrDefault')??defaults,'rPr')):{};const defaultParagraph=defaults?readParagraphStyle(child(child(defaults,'pPrDefault')??defaults,'pPr')):{};defaultRunStyle=defaultRun;defaultParagraphStyle=defaultParagraph;styles.set('Normal',{run:defaultRun,paragraph:defaultParagraph})
     for (const element of Array.from(
       root.getElementsByTagNameNS(w, 'style'),
     )) {
@@ -311,19 +316,34 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     }
     for (const id of nodes.keys()) resolve(id, new Set())
   }
+  if (stylesPart && !styles.has('DefaultParagraphFont') && ['basedOn','rStyle'].some(name=>Array.from(parseDocumentXml(stylesPart).getElementsByTagNameNS(w,name)).some(node=>val(node)==='DefaultParagraphFont'))) { const definition = {kind:'character' as const,paragraph:{},run:defaultRunStyle,label:'Default Paragraph Font'}; const id=importedStyleId(definition); styleAliases.set('DefaultParagraphFont',id);styleDefinitions[id]=definition }
   if(stylesPart)for(const node of Array.from(parseDocumentXml(stylesPart).getElementsByTagNameNS(w,'style'))){
-    const rawId=node.getAttributeNS(w,'styleId')!;if(!['paragraph','character'].includes(node.getAttributeNS(w,'type')??'')||(node.getAttributeNS(w,'type')==='paragraph'&&/(?:^|-)Normal$|Heading[1-6]$/i.test(rawId)))continue
-    const resolved=styles.get(rawId)!;const kind=(node.getAttributeNS(w,'type')??'paragraph') as 'paragraph'|'character';const parent=val(child(node,'basedOn'));const label=val(child(node,'name'))??rawId
-    if(kind==='paragraph'&&parent)lose('PARAGRAPH_STYLE_INHERITANCE_FLATTENED','Paragraph basedOn properties are resolved visually, but the editable parent-style association is flattened; the original retains the exact graph.')
-    const run=kind==='character'?{...readRunStyle(child(node,'rPr'),false),...(parent?{characterStyleId:parent}:{})}:{...resolved.run}
-    const definition={kind,paragraph:kind==='character'?{}:{...resolved.paragraph,name:undefined},run,label};const id=importedStyleId(definition);styleAliases.set(rawId,id);styleDefinitions[id]={...definition,paragraph:{...definition.paragraph,...(kind==='paragraph'?{name:id}:{})}}
+    const rawId=node.getAttributeNS(w,'styleId')!;if(!['paragraph','character'].includes(node.getAttributeNS(w,'type')??''))continue
+    const kind=(node.getAttributeNS(w,'type')??'paragraph') as 'paragraph'|'character';const parent=val(child(node,'basedOn'));const label=val(child(node,'name'))??rawId
+    const run={...readRunStyle(child(node,'rPr'),false)}
+    const definition={kind,paragraph:kind==='character'?{}:{...readParagraphStyle(child(node,'pPr')),name:undefined},run,label,...(parent?{basedOn:parent}:{})};const id=importedStyleId(definition);styleAliases.set(rawId,id);styleDefinitions[id]={...definition,paragraph:{...definition.paragraph,...(kind==='paragraph'?{name:id}:{})}}
   }
   for(const definition of Object.values(styleDefinitions))if(definition.run.characterStyleId){const id=styleAliases.get(definition.run.characterStyleId);if(id)definition.run.characterStyleId=id;else{delete definition.run.characterStyleId;lose('UNDEFINED_CHARACTER_STYLE','Unknown character style references retain only available direct properties.')}}
+  for(const definition of Object.values(styleDefinitions))if(definition.basedOn){const id=styleAliases.get(definition.basedOn);if(id)definition.basedOn=id;else{delete definition.basedOn;lose('UNDEFINED_STYLE_PARENT','Undefined named style parents cannot be preserved; available resolved properties remain.') }}
   validateStyles(styleDefinitions)
   const assets: DocxIncomingAsset[] = []
+  let compatibilityMode: WordDocument['compatibilityMode']
+  const settings = files.get('word/settings.xml')
+  if (settings) {
+    const root = parseDocumentXml(settings)
+    for (const element of Array.from(root.getElementsByTagNameNS(w,'compatSetting'))) {
+      if (element.getAttributeNS(w,'name') !== 'compatibilityMode') { lose('WORD_COMPATIBILITY_UNSUPPORTED','Additional Word compatibility settings require explicit layout handling.'); continue }
+      const value = Number(element.getAttributeNS(w,'val'))
+      if (value === 11 || value === 12 || value === 14 || value === 15) compatibilityMode = value
+      else lose('WORD_COMPATIBILITY_UNSUPPORTED','Unknown Word compatibility mode requires explicit layout handling.')
+    }
+    for (const compat of Array.from(root.getElementsByTagNameNS(w,'compat'))) for (const element of Array.from(compat.childNodes)) if (element.nodeType === 1 && 'localName' in element && element.localName !== 'compatSetting') lose('WORD_COMPATIBILITY_UNSUPPORTED','Legacy Word compatibility switches require explicit layout handling.')
+  }
     const makeDocument = () =>
     ({
       schemaVersion: 1 as const,
+      defaults: { paragraph: structuredClone(defaultParagraphStyle), run: structuredClone(defaultRunStyle) },
+      ...(compatibilityMode === undefined ? {} : {compatibilityMode}),
       blocks: [] as DocumentBlock[],
       changes: [],
       comments: [],
@@ -367,7 +387,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   const mappedPageParts = new Set<string>()
   const footerParts = new Set<string>()
   const paragraph = (element: Element, part = 'word/document.xml'): DocumentParagraph => {
-    const style = readParagraphStyle(child(element, 'pPr'));const defaultStyle=styles.get(defaultParagraphId);if(!val(child(child(element,'pPr')??element,'pStyle'))){Object.assign(style,{...defaultStyle?.paragraph,...style});if(styleAliases.has(defaultParagraphId))style.name=styleAliases.get(defaultParagraphId)}
+    const style = readParagraphStyle(child(element, 'pPr'));const defaultStyle=styles.get(defaultParagraphId);if(!val(child(child(element,'pPr')??element,'pStyle'))){if(styleAliases.has(defaultParagraphId))style.name=styleAliases.get(defaultParagraphId);else Object.assign(style,{...defaultStyle?.paragraph,...style})}
     const block: DocumentParagraph = { type: 'paragraph', id: randomUUID(), style, runs: [] }
     const styleId = val(child(child(element, 'pPr') ?? element, 'pStyle'))??defaultParagraphId
     const inherited = styleId ? (styles.get(styleId)?.run ?? {}) : {}
@@ -375,8 +395,8 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     const pointStarts = new Map<string, { count: number; previous?: DocumentRun }>()
     const pendingPoints: string[] = []
     const pageResults = new Set<Element>()
-    const fields: Array<{ instruction: string; result: boolean; page: boolean }> = []
-    let mappedPage = false
+    const pageFieldRuns = new Set<Element>()
+    const fields: Array<{ instruction: string; result: boolean; page: boolean; start: Element }> = []
     for (const run of Array.from(element.getElementsByTagNameNS(w, 'r'))) for (const childNode of Array.from(run.childNodes)) {
       if (childNode.nodeType !== 1) continue
       const childElement = childNode as Element
@@ -384,20 +404,18 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
       const field = fields.at(-1)
       if (childElement.localName === 'fldChar') {
         const kind = childElement.getAttributeNS(w, 'fldCharType')
-        if (kind === 'begin') fields.push({ instruction: '', result: false, page: false })
+        if (kind === 'begin') fields.push({ instruction: '', result: false, page: false, start: run })
         else if (kind === 'separate' && field) {
           field.result = true; field.page = /^\s*PAGE\s*$/i.test(field.instruction)
-          if (field.page && footerParts.has(part)) { mappedPage = true; mappedPageParts.add(part) }
-          else if (field.page) lose('PAGE_FIELD_POSITION', 'Inline/header PAGE fields retain their stored display text; the supported canonical page counter uses a footer position.')
+          if (field.page) { pageFieldRuns.add(field.start); mappedPageParts.add(part) }
         } else if (kind === 'end') {
           if (field && !field.result && /^\s*PAGE\s*$/i.test(field.instruction)) {
-            if (footerParts.has(part)) { mappedPage = true; mappedPageParts.add(part) }
-            else lose('PAGE_FIELD_POSITION', 'Inline/header PAGE fields retain their stored display text; the supported canonical page counter uses a footer position.')
+            pageFieldRuns.add(field.start); mappedPageParts.add(part)
           }
           fields.pop()
         }
       } else if (childElement.localName === 'instrText' && field) field.instruction += childElement.textContent ?? ''
-      else if (['t', 'delText'].includes(childElement.localName!) && field?.result && field.page && footerParts.has(part)) pageResults.add(childElement)
+      else if (['t', 'delText'].includes(childElement.localName!) && field?.result && field.page) pageResults.add(childElement)
     }
 
     const visit = (node: Node, revision?: Element, hyperlink?: string) => {
@@ -430,8 +448,9 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
         }
         if (element.namespaceURI === w && name === 'r') {
           const properties = child(element, 'rPr')
-          let text = ''; const segments: Array<{text: string; inlineImage?: Omit<Extract<DocumentBlock,{type:'image'}>,'type'|'id'>}> = []
+          let text = ''; const segments: Array<{text: string; field?: 'pageNumber'; inlineImage?: Omit<Extract<DocumentBlock,{type:'image'}>,'type'|'id'>}> = []
           const flushText = () => { if(text) segments.push({text}); text='' }
+          if (pageFieldRuns.has(element)) segments.push({text:'',field:'pageNumber'})
           for (const value of Array.from(element.childNodes)) {
             if (value.nodeType !== 1) continue
             const item = value as Element
@@ -459,6 +478,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
           const run: DocumentRun = {
             id: randomUUID(),
             text: segment.text,
+            ...(segment.field ? {field:segment.field} : {}),
             ...(segment.inlineImage ? {inlineImage:segment.inlineImage} : {}),
             style: segment.inlineImage ? {} : {
               ...(block.style.name?{}:inherited),
@@ -540,7 +560,6 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     }
     const formatting=properties?child(properties,'pPrChange'):undefined
     if(formatting){document.changes.push({id:randomUUID(),kind:'paragraphFormat',authorId:0,authorName:'Imported author',importedAuthor:formatting.getAttributeNS(w,'author')??'Unknown imported author',createdAt:date(formatting.getAttributeNS(w,'date')),status:'pending',origin:'import',targetRunIds:[],targetBlockIds:[block.id],beforeParagraphStyle:readParagraphStyle(child(formatting,'pPr')),afterParagraphStyle:{...block.style}})}
-    if (mappedPage && (block.runs.some((run) => run.text.trim() || run.inlineImage) || block.style.alignment && block.style.alignment !== 'center')) lose('PAGE_FIELD_POSITION', 'A footer PAGE field shares authored text or a noncenter alignment; its cached result becomes the canonical page counter while the source position remains only in the preserved original.')
     return block
   }
   const date = (raw: string | null) =>
@@ -548,6 +567,11 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
       ? new Date(raw).toISOString()
       : '1970-01-01T00:00:00.000Z'
   const image = (element: Element, part = 'word/document.xml'): Extract<DocumentBlock, {type: 'image'}> | null => {
+    const inline = element.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing', 'inline').item(0)
+    const effects = element.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing', 'effectExtent').item(0)
+    const crop = element.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/main', 'srcRect').item(0)
+    if (inline && ['distT','distB','distL','distR'].some(attribute => !inline.hasAttribute(attribute))) lose('IMAGE_DISTANCE_UNSPECIFIED', 'Omitted inline distances have differing application defaults. Export uses explicit zero distances; the original must pass native comparison before conversion is eligible.')
+    if (inline && ['distT','distB','distL','distR'].some(attribute => number(inline.getAttribute(attribute)) !== 0) || effects && ['t','b','l','r'].some(attribute => number(effects.getAttribute(attribute)) !== 0) || crop && ['t','b','l','r'].some(attribute => number(crop.getAttribute(attribute)) !== 0)) lose('IMAGE_PRESENTATION_UNSUPPORTED', 'Nonzero inline distances, drawing effects and image cropping require a presentation model. Preserve the original; this candidate is not fidelity eligible.')
     const drawing = element
       .getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/main', 'blip')
       .item(0)
@@ -683,7 +707,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   }
   document.blocks = parseBlocks(body)
   const normal = styles.get(defaultParagraphId)?.run
-  const baseLayout = defaultLayout(); baseLayout.pageNumbers=false; if (normal?.font) baseLayout.font = normal.font; if (normal?.size) baseLayout.fontSize = normal.size
+  const baseLayout = defaultLayout(); baseLayout.pageNumbers=false; if(fonts.length)baseLayout.embeddedFontFaces=fonts.flatMap(font=>(['regular','bold','italic','boldItalic'] as const).flatMap(slot=>{const face=font[slot];return face?[{family:font.family,slot,sha256:face.sha256,fontKey:face.fontKey}]:[]})); if (normal?.font) baseLayout.font = normal.font; if (normal?.size) baseLayout.fontSize = normal.size
   const readSectionLayout = (section: Element | undefined): {layout:DocumentLayout;stories:{header?:WordDocument;footer?:WordDocument}} => {
     const layout = structuredClone(baseLayout);const stories:{header?:WordDocument;footer?:WordDocument}={}; if (!section) return {layout,stories}
     const columns = child(section, 'cols')
@@ -755,7 +779,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   const omittedComments = document.comments.filter((comment) => !retainedCommentIds.has(comment.id))
   if (omittedComments.length) lose('CROSS_SECTION_COMMENT', 'Comments spanning section documents remain in the preserved original for reconciliation.', omittedComments.length)
   const compatibleDocument = retainReview(document); validateDocument(compatibleDocument)
-  return {document: compatibleDocument,sections,styleDefinitions,assets,losses:Array.from(losses.values()),detected}
+  return {document: compatibleDocument,sections,styleDefinitions,fonts,assets,losses:Array.from(losses.values()),detected}
 }
 
 function imageSize(

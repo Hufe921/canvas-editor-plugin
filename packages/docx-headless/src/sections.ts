@@ -4,9 +4,10 @@ import type { WordDocument } from './model'
 import type { DocxAsset } from './export'
 import type { WordStories } from './stories'
 import type { WordStyleDefinitions } from './styles'
+import { embeddedFontParts, type WordEmbeddedFont } from './fonts'
 import { WordCodecError } from './errors'
 const escapeXml=(text:string)=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
-export interface WordPackageInput {sections:Array<{title:string;startsSection?:boolean;suppressTitle?:boolean;breakAfter?:'continuous'|'nextPage';document:WordDocument;stories?:WordStories}>;assets:Map<number,DocxAsset>;styleDefinitions?:WordStyleDefinitions}
+export interface WordPackageInput {sections:Array<{title:string;startsSection?:boolean;suppressTitle?:boolean;breakAfter?:'continuous'|'nextPage';document:WordDocument;stories?:WordStories}>;assets:Map<number,DocxAsset>;styleDefinitions?:WordStyleDefinitions;approvedFonts?:WordEmbeddedFont[]}
 
 import { parseDocumentXml, validateDocxPackage } from './packageValidation'
 import { createZipBuffer, type ZipEntry } from './zipArchive'
@@ -19,6 +20,7 @@ const serialize = (element: Element) => new XMLSerializer().serializeToString(el
 /** Merge independently validated scene packages without flattening their review,
  * assets or section stories. All part, relationship and numeric identities are rebased. */
 export async function exportDocxSections(input: WordPackageInput, mode: ExportMode): Promise<Buffer> {
+  if (input.sections.some(section => section.document.compatibilityMode !== input.sections[0]?.document.compatibilityMode)) throw new WordCodecError('EXPORT_COMPATIBILITY_CONFLICT','Sections cannot replace document-wide compatibility settings.',409)
   const nativeRanges=input.sections.reduce((count,section)=>count+section.document.comments.length,0)
   if(mode==='retain-review'&&nativeRanges>32767)throw new WordCodecError('EXPORT_COMMENT_RANGE_LIMIT','Word supports at most 32767 native comment ranges per document. Resolve review or export an explicit final/original projection with review sidecar.',409,{nativeRanges,maximum:32767})
   const files: ZipEntry[] = []
@@ -28,6 +30,7 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
   const comments: string[] = []
   const numbers: string[] = []
   const styles: string[] = []
+  const defaults: string[] = []
   let relationshipIndex = 0
   let commentIndex = 0
   let numberIndex = 0
@@ -36,9 +39,11 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
   let revisionIndex = 0
   for (let sectionIndex = 0; sectionIndex < input.sections.length; sectionIndex++) {
     const source = await validateDocxPackage(
-      await exportDocx(input.sections[sectionIndex].document, mode, input.assets, input.sections[sectionIndex].stories,input.styleDefinitions),
+      await exportDocx(input.sections[sectionIndex].document, mode, input.assets, input.sections[sectionIndex].stories,input.styleDefinitions,input.approvedFonts),
       true,
     )
+    const sourceDefaults=parseDocumentXml(source.get('word/styles.xml')!).getElementsByTagNameNS(w,'docDefaults').item(0)
+    if(sourceDefaults){const content=serialize(sourceDefaults);if(defaults.length&&defaults[0]!==content)throw new WordCodecError('EXPORT_DEFAULTS_CONFLICT','Sections cannot silently replace document-wide defaults.',409);if(!defaults.length)defaults.push(content)}
     const prefix = `section-${sectionIndex}`
     const doc = parseDocumentXml(source.get('word/document.xml')!)
     const relationshipMap = new Map<string, string>()
@@ -48,7 +53,7 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
     for (let index = 0; index < sourceRelations.length; index++) {
       const element = sourceRelations.item(index)!
       const type = element.getAttribute('Type')!
-      if (/\/(styles|numbering|comments|settings)$/.test(type)) continue
+      if (/\/(styles|numbering|comments|settings|fontTable)$/.test(type)) continue
       const id = `rId${++relationshipIndex}`
       relationshipMap.set(element.getAttribute('Id')!, id)
       element.setAttribute('Id', id)
@@ -99,12 +104,16 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
     for (let index = 0; index < styleElements.length; index++) {
       const element = styleElements.item(index)!
       const originalId=element.getAttribute('w:styleId')!
+      if (input.styleDefinitions?.[originalId]) {
+        if (sectionIndex === 0) styles.push(serialize(element))
+        continue
+      }
       element.setAttribute('w:styleId', `${prefix}-${element.getAttribute('w:styleId')}`)
       element.removeAttribute('w:default')
       const name = element.getElementsByTagNameNS(w, 'name').item(0)
       if (name && !input.styleDefinitions?.[originalId]) name.setAttribute('w:val', `${prefix}-${name.getAttribute('w:val')}`)
       const based = element.getElementsByTagNameNS(w, 'basedOn').item(0)
-      if (based) based.setAttribute('w:val', `${prefix}-${based.getAttribute('w:val')}`)
+      if (based && !input.styleDefinitions?.[based.getAttribute('w:val')!]) based.setAttribute('w:val', `${prefix}-${based.getAttribute('w:val')}`)
       styles.push(serialize(element))
     }
     const descendants = doc.getElementsByTagName('*')
@@ -125,6 +134,7 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
       if (
         element.namespaceURI === w &&
         ['pStyle','rStyle'].includes(element.localName!) &&
+        !input.styleDefinitions?.[element.getAttribute('w:val')!] &&
         !element.getAttribute('w:val')?.startsWith(prefix + '-')
       )
         element.setAttribute('w:val', `${prefix}-${element.getAttribute('w:val')}`)
@@ -182,7 +192,8 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
           '/word/settings.xml',
           '/word/comments.xml',
           '/word/numbering.xml',
-        ].includes(part)
+          '/word/fontTable.xml',
+        ].includes(part) || part.startsWith('/word/fonts/')
       )
         continue
       type.setAttribute('PartName', part.replace('/word/', `/word/${prefix}/`))
@@ -190,13 +201,15 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
     }
     for (const [name, bytes] of source)
       if (
-        name.startsWith('word/') &&
+        name.startsWith('word/') && !name.startsWith('word/fonts/') &&
         ![
           'word/document.xml',
           'word/styles.xml',
           'word/settings.xml',
           'word/comments.xml',
           'word/numbering.xml',
+          'word/fontTable.xml',
+          'word/_rels/fontTable.xml.rels',
           'word/_rels/document.xml.rels',
         ].includes(name)
       ) {
@@ -217,9 +230,9 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
               style.setAttribute('w:val', 'Normal')
               properties.insertBefore(style, properties.firstChild)
             }
-            style.setAttribute('w:val', `${prefix}-${style.getAttribute('w:val')}`)
+            if (!input.styleDefinitions?.[style.getAttribute('w:val')!]) style.setAttribute('w:val', `${prefix}-${style.getAttribute('w:val')}`)
           }
-          for(const reference of Array.from(storyDoc.getElementsByTagNameNS(w,'rStyle')))reference.setAttribute('w:val',`${prefix}-${reference.getAttribute('w:val')}`)
+          for(const reference of Array.from(storyDoc.getElementsByTagNameNS(w,'rStyle')))if(!input.styleDefinitions?.[reference.getAttribute('w:val')!])reference.setAttribute('w:val',`${prefix}-${reference.getAttribute('w:val')}`)
           for (const number of Array.from(storyDoc.getElementsByTagNameNS(w, 'numId')))
             number.setAttribute('w:val', numberMap.get(number.getAttribute('w:val')!)!)
           for (const element of Array.from(storyDoc.getElementsByTagName('*'))) {
@@ -243,6 +256,9 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
     )
   relation('styles', 'styles.xml')
   relation('settings', 'settings.xml')
+  const fonts = embeddedFontParts(input.approvedFonts ?? [])
+  files.push(...fonts.files)
+  if (fonts.files.length) relation('fontTable', 'fontTable.xml')
   if (numbers.length) {
     relation('numbering', 'numbering.xml')
     files.push({
@@ -266,7 +282,7 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
   ]
   files.push({
     name: '[Content_Types].xml',
-    content: `${declaration}<Types xmlns="${ct}"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/>${names.map((name) => `<Override PartName="/word/${name}.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${name === 'document' ? 'document.main' : name}+xml"/>`).join('')}${overrides.join('')}</Types>`,
+    content: `${declaration}<Types xmlns="${ct}"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/>${names.map((name) => `<Override PartName="/word/${name}.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${name === 'document' ? 'document.main' : name}+xml"/>`).join('')}${overrides.join('')}${fonts.overrides}</Types>`,
   })
   files.push({
     name: '_rels/.rels',
@@ -282,11 +298,11 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
   })
   files.push({
     name: 'word/styles.xml',
-    content: `${declaration}<w:styles xmlns:w="${w}">${styles.join('')}</w:styles>`,
+    content: `${declaration}<w:styles xmlns:w="${w}">${defaults.join('')}${styles.join('')}</w:styles>`,
   })
   files.push({
     name: 'word/settings.xml',
-    content: `${declaration}<w:settings xmlns:w="${w}">${mode === 'retain-review' ? '<w:trackRevisions/>' : ''}</w:settings>`,
+    content: `${declaration}<w:settings xmlns:w="${w}">${mode === 'retain-review' ? '<w:trackRevisions/>' : ''}${input.sections[0]?.document.compatibilityMode === undefined ? '' : `<w:compat><w:compatSetting w:val="${input.sections[0].document.compatibilityMode}" w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word"/></w:compat>`}</w:settings>`,
   })
   const bytes = await createZipBuffer(files)
   await validateDocxPackage(bytes, true)

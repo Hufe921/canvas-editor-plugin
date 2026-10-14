@@ -5,6 +5,8 @@ export interface TextStyle {
   characterStyleId?: string;
   font?: string;
   size?: number;
+  /** Extra glyph advance, in CSS pixels (Word stores twips). */
+  characterSpacing?: number;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
@@ -35,13 +37,15 @@ export interface ParagraphStyle {
 export interface WordBorder { style: 'none' | 'single' | 'double' | 'dashed' | 'dotted'; color: string; width: number; space: number }
 export interface WordBorders { top?: WordBorder; right?: WordBorder; bottom?: WordBorder; left?: WordBorder; insideHorizontal?: WordBorder; insideVertical?: WordBorder }
 export interface TablePresentation { alignment?: 'left' | 'center' | 'right'; indent?: number; layout?: 'fixed' | 'auto'; width?: { type: 'auto' | 'percent' | 'absolute'; value: number }; borders?: WordBorders; shading?: string; margins?: [number, number, number, number] }
-export interface CellPresentation { borders?: WordBorders; shading?: string; margins?: [number, number, number, number]; verticalAlignment?: 'top' | 'center' | 'bottom' }
+export interface CellPresentation { width?: TablePresentation['width']; borders?: WordBorders; shading?: string; margins?: [number, number, number, number]; verticalAlignment?: 'top' | 'center' | 'bottom' }
 export interface DocumentCell { id: string; paragraphs: DocumentParagraph[]; blocks?: DocumentBlock[]; presentation?: CellPresentation }
 export interface DocumentRun {
   id: string;
   text: string;
   style: TextStyle;
   changeId?: string;
+  /** Protected dynamic field; no cached page number is editable source text. */
+  field?: 'pageNumber';
   inlineImage?: Omit<DocumentImage, 'type' | 'id'>;
 }
 export interface DocumentParagraph {
@@ -105,6 +109,7 @@ export interface DocumentComment {
   importedAuthor?: string;
 }
 export interface DocumentLayout {
+  embeddedFontFaces?: Array<{family:string;slot:'regular'|'bold'|'italic'|'boldItalic';sha256:string;fontKey:string}>;
   preset?: string;
   columns?: { count: number; gap: number };
   width: number;
@@ -120,7 +125,9 @@ export interface DocumentLayout {
   footer: DocumentParagraph[];
 }
 export interface WordDocument {
+  compatibilityMode?: 11 | 12 | 14 | 15;
   schemaVersion: 1;
+  defaults?: { paragraph: ParagraphStyle; run: TextStyle };
   blocks: DocumentBlock[];
   changes: DocumentChange[];
   comments: DocumentComment[];

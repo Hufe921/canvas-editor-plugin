@@ -8,10 +8,11 @@ const borders = z.object({ top: border.optional(), right: border.optional(), bot
 const length = z.number().nonnegative().max(8192)
 const margins = z.tuple([length, length, length, length])
 const tablePresentation = z.object({ alignment: z.enum(['left', 'center', 'right']).optional(), indent: length.optional(), layout: z.enum(['fixed', 'auto']).optional(), width: z.object({ type: z.enum(['auto', 'percent', 'absolute']), value: length }).strict().refine(width => width.type !== 'percent' || width.value <= 100).optional(), borders: borders.optional(), shading: color.optional(), margins: margins.optional() }).strict()
-const cellPresentation = z.object({ borders: borders.optional(), shading: color.optional(), margins: margins.optional(), verticalAlignment: z.enum(['top', 'center', 'bottom']).optional() }).strict()
+const cellPresentation = z.object({ width: z.object({ type: z.enum(['auto', 'percent', 'absolute']), value: length }).strict().refine(width => width.type !== 'percent' || width.value <= 100).optional(), borders: borders.optional(), shading: color.optional(), margins: margins.optional(), verticalAlignment: z.enum(['top', 'center', 'bottom']).optional() }).strict()
 const textStyle = z.object({
   characterStyleId:identifier.optional(),
-  font: z.string().min(1).max(100).optional(), size: z.number().min(6).max(144).optional(),
+  characterSpacing: z.number().min(-20).max(100).optional(),
+  font: z.string().min(1).max(100).optional(), size: z.number().min(2 / 3).max(144).optional(),
   bold: z.boolean().optional(), italic: z.boolean().optional(), underline: z.boolean().optional(), strikeout: z.boolean().optional(),
   color: color.optional(), highlight: color.optional(), hyperlink: z.string().max(2048).url().refine((value) => /^https?:\/\//i.test(value), 'Only HTTP(S) hyperlinks are supported').optional(),
 }).strict()
@@ -20,7 +21,7 @@ const inlineImage = z.object({ assetId: z.number().int().positive(), sha256: z.s
 const paragraph = z.object({
   type: z.literal('paragraph'), id: identifier, changeId: identifier.optional(), boundaryChangeId: identifier.optional(),
   style: paragraphStyle,
-  runs: z.array(z.object({ id: identifier, text: z.string().max(MAX_DOCUMENT_BYTES), style: textStyle, changeId: identifier.optional(), inlineImage: inlineImage.optional() }).strict()).min(1).max(20000),
+  runs: z.array(z.object({ id: identifier, text: z.string().max(MAX_DOCUMENT_BYTES), style: textStyle, changeId: identifier.optional(), inlineImage: inlineImage.optional(), field: z.literal('pageNumber').optional() }).strict().refine(run => !run.field || !run.text && !run.inlineImage && !run.changeId, 'Dynamic fields cannot contain editable text, images or insertion/deletion revisions')).min(1).max(20000),
 }).strict()
 const blockSchema: z.ZodType<DocumentBlock> = z.lazy(() => z.discriminatedUnion('type', [paragraph,
     z.object({ type: z.literal('image'), id: identifier, assetId: z.number().int().positive(), sha256: z.string().regex(/^[a-f0-9]{64}$/), alt: z.string().max(2000), width: z.number().positive().max(16384), height: z.number().positive().max(16384) }).strict(),
@@ -29,10 +30,12 @@ const blockSchema: z.ZodType<DocumentBlock> = z.lazy(() => z.discriminatedUnion(
   ]))
 export const documentSchema = z.object({
   schemaVersion: z.literal(1),
+  defaults: z.object({paragraph:paragraphStyle,run:textStyle}).strict().optional(),
+  compatibilityMode: z.union([z.literal(11),z.literal(12),z.literal(14),z.literal(15)]).optional(),
   blocks: z.array(blockSchema).max(20000),
   changes: z.array(z.object({ id: identifier, kind: z.enum(['insertion', 'deletion', 'format', 'paragraphInsertion', 'paragraphDeletion', 'paragraphFormat', 'paragraphSplit', 'paragraphJoin']), authorId: z.number().int().nonnegative().optional(), authorName: z.string().max(200), createdAt: z.string().datetime(), status: z.enum(['pending', 'accepted', 'rejected']), origin: z.string().max(200).optional(), importedAuthor: z.string().max(200).optional(), targetRunIds: z.array(identifier).max(20000), targetBlockIds: z.array(identifier).max(20000).optional(), beforeStyle: textStyle.optional(), afterStyle: textStyle.optional(), beforeParagraphStyle: paragraphStyle.optional(), afterParagraphStyle: paragraphStyle.optional() }).strict()).max(10000),
   comments: z.array(z.object({ id: identifier, authorId: z.number().int().nonnegative().optional(), authorName: z.string().max(200), createdAt: z.string().datetime(), text: z.string().max(10000), anchors: z.array(z.object({ blockId: identifier, runId: identifier, start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), sourceText: z.string().max(20000) }).strict()).min(1).max(1000), resolved: z.boolean(), importedAuthor: z.string().max(200).optional() }).strict()).max(10000),
-  layout: z.object({ columns: z.object({ count: z.number().int().min(1).max(6), gap: z.number().min(0).max(500) }).strict().optional(), preset: z.string().max(200).optional(), width: z.number().min(100).max(2000), height: z.number().min(100).max(3000), margins: z.tuple([z.number().nonnegative(), z.number().nonnegative(), z.number().nonnegative(), z.number().nonnegative()]), headerDistance: length.optional(), footerDistance: length.optional(), gutter: length.optional(), font: z.string().min(1).max(100), fontSize: z.number().min(6).max(144), pageNumbers: z.boolean(), header: z.array(paragraph).max(100), footer: z.array(paragraph).max(100) }).strict(),
+  layout: z.object({ embeddedFontFaces: z.array(z.object({family:z.string().min(1).max(100),slot:z.enum(['regular','bold','italic','boldItalic']),sha256:z.string().regex(/^[a-f0-9]{64}$/),fontKey:z.string().regex(/^\{[a-f0-9-]{36}\}$/i)}).strict()).max(128).optional(), columns: z.object({ count: z.number().int().min(1).max(6), gap: z.number().min(0).max(500) }).strict().optional(), preset: z.string().max(200).optional(), width: z.number().min(100).max(2000), height: z.number().min(100).max(3000), margins: z.tuple([z.number().nonnegative(), z.number().nonnegative(), z.number().nonnegative(), z.number().nonnegative()]), headerDistance: length.optional(), footerDistance: length.optional(), gutter: length.optional(), font: z.string().min(1).max(100), fontSize: z.number().min(6).max(144), pageNumbers: z.boolean(), header: z.array(paragraph).max(100), footer: z.array(paragraph).max(100) }).strict(),
 }).strict()
 function validateExchangeDocument(raw: unknown): WordDocument {
   const active = new Set<object>(); let count = 0
@@ -53,7 +56,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
   validateUnicode(document)
   const ids = new Set<string>()
   const add = (id: string) => { if (ids.has(id)) throw new Error('Duplicate document identity'); ids.add(id) }
-  const runs = new Map<string, { text: string; blockId: string }>()
+  const runs = new Map<string, { text: string; blockId: string; protected: boolean }>()
   for (const block of allBlocks(document.blocks)) {
     if (block.type !== 'paragraph') add(block.id)
     if (block.type === 'table') {
@@ -65,7 +68,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
     for (const run of block.runs) {
       add(run.id)
       if (run.inlineImage && (run.text !== '' || Object.keys(run.style).length)) throw new Error('Inline images require a protected empty text/style run')
-      runs.set(run.id, { text: run.text, blockId: block.id })
+      runs.set(run.id, { text: run.text, blockId: block.id, protected: Boolean(run.field || run.inlineImage) })
     }
   }
   const paragraphIds = new Set(paragraphsOf(document, true).map((block) => block.id))
@@ -80,6 +83,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
   const paragraphFormats = new Set<string>()
   for (const change of document.changes) {
     add(change.id); if (change.targetRunIds.some((id) => !runs.has(id)) || change.targetBlockIds?.some((id) => !paragraphIds.has(id))) throw new Error('Change target does not exist')
+    if (change.targetRunIds.some(id => runs.get(id)?.protected)) throw new Error('Review cannot target protected fields or images')
     if (new Set(change.targetRunIds).size !== change.targetRunIds.length || new Set(change.targetBlockIds).size !== (change.targetBlockIds?.length ?? 0)) throw new Error('Duplicate change target')
     if (change.kind.startsWith('paragraph') && (!change.targetBlockIds?.length || change.targetRunIds.length)) throw new Error('Paragraph revisions require paragraph targets')
     if (['paragraphInsertion', 'paragraphDeletion'].includes(change.kind) && change.status === 'pending' && change.targetBlockIds?.some((id) => paragraphsOf(document, true).find((block) => block.id === id)?.changeId !== change.id)) throw new Error('Pending paragraph review links cannot be discarded')
@@ -104,7 +108,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
     add(comment.id)
     for (const anchor of comment.anchors) {
       const run = runs.get(anchor.runId)
-      if (!run || run.blockId !== anchor.blockId || anchor.end < anchor.start || anchor.end > run.text.length || run.text.slice(anchor.start, anchor.end) !== anchor.sourceText) throw new Error('Comment anchor is stale')
+      if (!run || run.protected || run.blockId !== anchor.blockId || anchor.end < anchor.start || anchor.end > run.text.length || run.text.slice(anchor.start, anchor.end) !== anchor.sourceText) throw new Error('Comment anchor is stale or protected')
     }
   }
   const { width, height, margins } = document.layout

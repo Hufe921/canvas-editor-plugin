@@ -6,6 +6,7 @@ import { validateStyles,type WordStyleDefinitions } from './styles'
 import { composeWordStories, type WordStories } from './stories'
 import { WordCodecError } from './errors'
 import { validateDocxPackage } from './packageValidation'
+import { embeddedFontParts, requireEmbeddedFonts, type WordEmbeddedFont } from './fonts'
 
 export type ExportMode = 'retain-review' | 'final' | 'original';
 export interface DocxAsset { bytes: Buffer; mediaType: 'image/png' | 'image/jpeg' | 'image/webp' }
@@ -22,18 +23,19 @@ function styleXml(style: TextStyle): string {
   // CT_RPr has a prescribed order; XML well-formedness alone cannot check it.
   return [
     style.characterStyleId?`<w:rStyle w:val="${xml(style.characterStyleId)}"/>`:'',
-    style.font ? `<w:rFonts w:ascii="${xml(style.font)}" w:hAnsi="${xml(style.font)}"/>` : '',
-    style.bold === undefined ? '' : style.bold ? '<w:b/>' : '<w:b w:val="0"/>',
-    style.italic === undefined ? '' : style.italic ? '<w:i/>' : '<w:i w:val="0"/>',
+    style.font ? `<w:rFonts w:ascii="${xml(style.font)}" w:hAnsi="${xml(style.font)}" w:eastAsia="${xml(style.font)}" w:cs="${xml(style.font)}"/>` : '',
+    style.bold === undefined ? '' : style.bold ? '<w:b/><w:bCs/>' : '<w:b w:val="0"/><w:bCs w:val="0"/>',
+    style.italic === undefined ? '' : style.italic ? '<w:i/><w:iCs/>' : '<w:i w:val="0"/><w:iCs w:val="0"/>',
     style.strikeout === undefined ? '' : `<w:strike w:val="${style.strikeout ? '1' : '0'}"/>`,
     style.color ? `<w:color w:val="${style.color.slice(1)}"/>` : '',
-    style.size ? `<w:sz w:val="${Math.round(style.size * 1.5)}"/>` : '',
+    style.characterSpacing === undefined ? '' : `<w:spacing w:val="${twips(style.characterSpacing)}"/>`,
+    style.size ? `<w:sz w:val="${Math.round(style.size * 1.5)}"/><w:szCs w:val="${Math.round(style.size * 1.5)}"/>` : '',
     style.underline === undefined ? '' : `<w:u w:val="${style.underline ? 'single' : 'none'}"/>`,
     style.highlight ? `<w:shd w:fill="${style.highlight.slice(1)}"/>` : '',
   ].join('')
 }
 /** Headless OOXML generation. No DOM, download, browser cookies or remote fetches. */
-export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Map<number, DocxAsset> = new Map(), ownedStories?:WordStories, definitions:WordStyleDefinitions={}): Promise<Buffer> {
+export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Map<number, DocxAsset> = new Map(), ownedStories?:WordStories, definitions:WordStyleDefinitions={}, approvedFonts:WordEmbeddedFont[]=[]): Promise<Buffer> {
   validateStyles(definitions)
   const {document,headerBlocks,footerBlocks} = composeWordStories(raw,ownedStories); const view: DocumentView = mode === 'retain-review' ? 'markup' : mode
   const files: ZipEntry[] = []; const relationships: string[] = []
@@ -41,6 +43,10 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   let story: keyof typeof stories = 'main'
   const relation = (type: string, target: string, external = false) => { const list = stories[story]; const id = `rId${list.length + 1}`; list.push(`<Relationship Id="${id}" Type="${r}/${type}" Target="${xml(target)}"${external ? ' TargetMode="External"' : ''}/>`); return id }
   relation('styles', 'styles.xml'); relation('settings', 'settings.xml')
+  const fonts = embeddedFontParts(approvedFonts)
+  requireEmbeddedFonts(document.layout.embeddedFontFaces ?? [], approvedFonts)
+  files.push(...fonts.files)
+  if (fonts.files.length) relation('fontTable', 'fontTable.xml')
   let revisionId = 0; let drawingId = 0
   const media = new Set<string>()
   const commentIds = new Map(document.comments.map((comment, index) => [comment.id, index]))
@@ -76,7 +82,7 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   for(const [id,definition] of Object.entries(definitions))if(definition.paragraph.list){listKinds.push(definition.paragraph.list);listIds.set('style:'+id+':'+definition.paragraph.list,listKinds.length)}
   if (listKinds.length) relation('numbering', 'numbering.xml')
   const paragraphProperties=(style:ParagraphStyle,blockId:string):string=>[
-      style.heading ? `<w:pStyle w:val="Heading${style.heading}"/>` : style.name ? `<w:pStyle w:val="${xml(style.name)}"/>` : '',
+      style.name ? `<w:pStyle w:val="${xml(style.name)}"/>` : style.heading ? `<w:pStyle w:val="Heading${style.heading}"/>` : '',
       style.keepWithNext===undefined?'':`<w:keepNext w:val="${style.keepWithNext?'1':'0'}"/>`,
       style.keepTogether===undefined?'':`<w:keepLines w:val="${style.keepTogether?'1':'0'}"/>`,
       style.pageBreakBefore===undefined?'':`<w:pageBreakBefore w:val="${style.pageBreakBefore?'1':'0'}"/>`,
@@ -97,10 +103,11 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
       if (!media.has(filename)) { files.push({ name: `word/media/${filename}`, content: asset.bytes }); media.add(filename) }
       const graphicId = ++drawingId
       const id = relation('image', `media/${filename}`); const cx = Math.round(block.width * 9525); const cy = Math.round(block.height * 9525)
-      return `<w:r><w:drawing><wp:inline><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${graphicId}" name="${xml(block.id)}" descr="${xml(block.alt)}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${graphicId}" name="${xml(filename)}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`
+      return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent t="0" r="0" b="0" l="0"/><wp:docPr id="${graphicId}" name="${xml(block.id)}" descr="${xml(block.alt)}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${graphicId}" name="${xml(filename)}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`
   }
-  const characterStyle=(id:string|undefined,seen=new Set<string>()):TextStyle=>{if(!id)return {};if(seen.has(id)||seen.size>=32)throw new WordCodecError('EXPORT_STYLE_INVALID','Character style inheritance is cyclic or too deep.',409);const definition=definitions[id];if(!definition||definition.kind!=='character')throw new WordCodecError('EXPORT_STYLE_UNAVAILABLE','Character style has no owned definition.',409);return {...characterStyle(definition.run.characterStyleId,new Set([...seen,id])),...definition.run}}
-  const effectiveRunStyle=(run:import('./model').DocumentRun,block:DocumentParagraph,selectedView:DocumentView=view):TextStyle=>{const direct=runStyle(run,document.changes,selectedView);const name=paragraphStyle(block,document.changes,selectedView).name;const base=name?definitions[name]?.run:undefined;const layout=story==='header'?ownedStories?.header?.layout:story==='footer'?ownedStories?.footer?.layout:undefined;return {...(layout?{font:layout.font,size:layout.fontSize}:{}),...characterStyle(base?.characterStyleId),...base,...characterStyle(direct.characterStyleId),...direct}}
+  const characterStyle=(id:string|undefined,seen=new Set<string>()):TextStyle=>{if(!id)return {};if(seen.has(id)||seen.size>=32)throw new WordCodecError('EXPORT_STYLE_INVALID','Character style inheritance is cyclic or too deep.',409);const definition=definitions[id];if(!definition||definition.kind!=='character')throw new WordCodecError('EXPORT_STYLE_UNAVAILABLE','Character style has no owned definition.',409);return {...characterStyle(definition.basedOn??definition.run.characterStyleId,new Set([...seen,id])),...definition.run}}
+  const inheritedStyleRun=(id:string|undefined,seen=new Set<string>()):TextStyle=>{if(!id)return {};if(seen.has(id)||seen.size>=32)throw new WordCodecError('EXPORT_STYLE_INVALID','Style inheritance is cyclic or too deep.',409);const definition=definitions[id];if(!definition)return {};return {...inheritedStyleRun(definition.basedOn,new Set([...seen,id])),...characterStyle(definition.run.characterStyleId),...definition.run}}
+  const effectiveRunStyle=(run:import('./model').DocumentRun,block:DocumentParagraph,selectedView:DocumentView=view):TextStyle=>{const direct=runStyle(run,document.changes,selectedView);const name=paragraphStyle(block,document.changes,selectedView).name;const base={...document.defaults?.run,...inheritedStyleRun(name)};const layout=story==='header'?ownedStories?.header?.layout:story==='footer'?ownedStories?.footer?.layout:undefined;return {...(layout?{font:layout.font,size:layout.fontSize}:{}),...characterStyle(base?.characterStyleId),...base,...characterStyle(direct.characterStyleId),...direct}}
   const paragraph = (block: DocumentParagraph): string => {
     if (!visibleParagraph(block, document.changes, view)) return ''
     const paragraphChange = document.changes.find((change) => change.id === block.changeId && change.status === 'pending')
@@ -143,9 +150,10 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
         const text = run.text.slice(offset, offsets[index + 1])
         const textXml = text.split(/(\n|\t)/).map((part) => part === '\n' ? '<w:br/>' : part === '\t' ? '<w:tab/>' : `<w:${tag} xml:space="preserve">${xml(part)}</w:${tag}>`).join('')
         const formatChange = native && formatting ? `<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor ?? formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(formatting.beforeStyle ?? {}):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>` : ''
-        content += `<w:r><w:rPr>${styleXml(effectiveRunStyle(run,block))}${formatChange}</w:rPr>${textXml}</w:r>`
+        content += `<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}${formatChange}</w:rPr>${textXml}</w:r>`
       }
-      if (!run.text && !run.inlineImage) {const formatChange=native&&formatting?`<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(formatting.beforeStyle??{}):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>`:'';content+=`<w:r><w:rPr>${styleXml(effectiveRunStyle(run,block))}${formatChange}</w:rPr><w:${tag} xml:space="preserve"></w:${tag}></w:r>`}
+      if (run.field === 'pageNumber') content += `<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}</w:rPr><w:fldChar w:fldCharType="begin"/><w:instrText xml:space="preserve">PAGE</w:instrText><w:fldChar w:fldCharType="separate"/><w:fldChar w:fldCharType="end"/></w:r>`
+      if (!run.text && !run.inlineImage && !run.field) {const formatChange=native&&formatting?`<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(formatting.beforeStyle??{}):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>`:'';content+=`<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}${formatChange}</w:rPr><w:${tag} xml:space="preserve"></w:${tag}></w:r>`}
       if (run.inlineImage) content += imageRun({ id: run.id, ...run.inlineImage })
       const hyperlink = effectiveRunStyle(run,block).hyperlink
       if (hyperlink) { const id = relation('hyperlink', hyperlink, true); content = `<w:hyperlink r:id="${id}">${content}</w:hyperlink>` }
@@ -167,8 +175,9 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
       body.push(`<w:tbl><w:tblPr>${properties}</w:tblPr><w:tblGrid>${block.widths.map(width => `<w:gridCol w:w="${twips(width)}"/>`).join('')}</w:tblGrid>${block.rows.map(row => {
         const properties = (row.keepTogether===undefined?'':`<w:cantSplit w:val="${row.keepTogether?'1':'0'}"/>`) + (row.repeatHeader===undefined?'':`<w:tblHeader w:val="${row.repeatHeader?'1':'0'}"/>`)
         return `<w:tr>${properties?`<w:trPr>${properties}</w:trPr>`:''}${row.cells.map((cell,index) => {
-          const appearance = cell.presentation ?? {}; const width = block.widths[index]; if (width===undefined) throw new WordCodecError('EXPORT_TABLE_GRID','Cell has no table-grid width.',422)
-          const properties = `<w:tcW w:w="${twips(width)}" w:type="dxa"/>` + (appearance.borders?bordersXml(appearance.borders,'tcBorders'):'') + (appearance.shading?shadingXml(appearance.shading):'') + (appearance.margins?marginsXml(appearance.margins,'tcMar'):'') + (appearance.verticalAlignment?`<w:vAlign w:val="${appearance.verticalAlignment}"/>`:'')
+          const appearance = cell.presentation ?? {}; const gridWidth = block.widths[index]; if (gridWidth===undefined) throw new WordCodecError('EXPORT_TABLE_GRID','Cell has no table-grid width.',422)
+          const width = appearance.width
+          const properties = (width?`<w:tcW w:w="${Math.round(width.value*(width.type==='percent'?50:width.type==='absolute'?15:1))}" w:type="${width.type==='percent'?'pct':width.type==='absolute'?'dxa':'auto'}"/>`: '') + (appearance.borders?bordersXml(appearance.borders,'tcBorders'):'') + (appearance.shading?shadingXml(appearance.shading):'') + (appearance.margins?marginsXml(appearance.margins,'tcMar'):'') + (appearance.verticalAlignment?`<w:vAlign w:val="${appearance.verticalAlignment}"/>`:'')
           const blocks = cellBlocks(cell); const content = renderBlocks(blocks).join(''); const last = blocks.at(-1)
           return `<w:tc><w:tcPr>${properties}</w:tcPr>${content}${last?.type==='paragraph'?'':'<w:p/>'}</w:tc>`
         }).join('')}</w:tr>`
@@ -184,7 +193,7 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   story = 'header'
   files.push({ name: 'word/header1.xml', content: `${declaration}<w:hdr ${ns}>${renderBlocks(headerBlocks).join('') || '<w:p/>'}</w:hdr>` })
   story = 'footer'
-  files.push({ name: 'word/footer1.xml', content: `${declaration}<w:ftr ${ns}>${renderBlocks(footerBlocks).join('')}${document.layout.pageNumbers ? '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>PAGE</w:instrText></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>' : '<w:p/>'}</w:ftr>` })
+  files.push({ name: 'word/footer1.xml', content: `${declaration}<w:ftr ${ns}>${renderBlocks(footerBlocks).join('')}${document.layout.pageNumbers && !paragraphsOf({ ...document, blocks: footerBlocks }).some(paragraph => paragraph.runs.some(run => run.field === 'pageNumber')) ? '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>PAGE</w:instrText></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>' : footerBlocks.length ? '' : '<w:p/>'}</w:ftr>` })
   story = 'main'
   for (const name of ['header', 'footer'] as const) if (stories[name].length) files.push({ name: `word/_rels/${name}1.xml.rels`, content: `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${stories[name].join('')}</Relationships>` })
   if (listKinds.length) files.push({ name: 'word/numbering.xml', content: `${declaration}<w:numbering xmlns:w="${w}">${['bullet', 'number'].map((kind, index) => `<w:abstractNum w:abstractNumId="${index}"><w:multiLevelType w:val="singleLevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="${kind === 'bullet' ? 'bullet' : 'decimal'}"/><w:lvlText w:val="${kind === 'bullet' ? '•' : '%1.'}"/><w:lvlJc w:val="left"/><w:pPr><w:tabs><w:tab w:val="num" w:pos="720"/></w:tabs><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>`).join('')}${listKinds.map((kind, index) => `<w:num w:numId="${index + 1}"><w:abstractNumId w:val="${kind === 'bullet' ? 0 : 1}"/></w:num>`).join('')}</w:numbering>` })
@@ -195,12 +204,12 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   const [top, right, bottom, left] = document.layout.margins
   body.push(`<w:sectPr><w:headerReference w:type="default" r:id="${headerId}"/><w:footerReference w:type="default" r:id="${footerId}"/><w:pgSz w:w="${twips(document.layout.width)}" w:h="${twips(document.layout.height)}"${document.layout.width > document.layout.height ? ' w:orient="landscape"' : ''}/><w:pgMar w:top="${twips(top)}" w:right="${twips(right)}" w:bottom="${twips(bottom)}" w:left="${twips(left)}" w:header="${twips(document.layout.headerDistance??24)}" w:footer="${twips(document.layout.footerDistance??24)}" w:gutter="${twips(document.layout.gutter??0)}"/>${document.layout.columns ? `<w:cols w:num="${document.layout.columns.count}" w:space="${twips(document.layout.columns.gap)}" w:equalWidth="1"/>` : ''}</w:sectPr>`)
   const overrides = ['document', 'styles', 'settings', 'comments', 'numbering'].filter((name) => (name !== 'comments' || mode === 'retain-review' && document.comments.length) && (name !== 'numbering' || listKinds.length)).map((name) => `<Override PartName="/word/${name}.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${name === 'document' ? 'document.main' : name}+xml"/>`).join('')
-  files.push({ name: '[Content_Types].xml', content: `${declaration}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/>${overrides}<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>` })
+  files.push({ name: '[Content_Types].xml', content: `${declaration}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/>${overrides}${fonts.overrides}<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>` })
   files.push({ name: '_rels/.rels', content: `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${r}/officeDocument" Target="word/document.xml"/></Relationships>` })
   files.push({ name: 'word/document.xml', content: `${declaration}<w:document ${ns}><w:body>${body.join('')}</w:body></w:document>` })
-  const namedStyleXml=Object.entries(definitions).sort(([a],[b])=>a.localeCompare(b)).map(([id,definition])=>`<w:style w:type="${definition.kind??'paragraph'}" w:styleId="${xml(id)}"><w:name w:val="${xml(definition.label??id)}"/>${definition.kind==='character'?(definition.run.characterStyleId?`<w:basedOn w:val="${xml(definition.run.characterStyleId)}"/>`:''):`<w:basedOn w:val="${definition.paragraph.heading?'Heading'+definition.paragraph.heading:'Normal'}"/><w:pPr>${paragraphProperties({...definition.paragraph,name:undefined,heading:undefined},'style:'+id)}</w:pPr>`}<w:rPr>${styleXml(definition.kind==='character'?{...definition.run,characterStyleId:undefined}:definition.run)}</w:rPr></w:style>`).join('')
-  files.push({ name: 'word/styles.xml', content: `${declaration}<w:styles xmlns:w="${w}"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="${xml(document.layout.font)}" w:hAnsi="${xml(document.layout.font)}"/><w:sz w:val="${Math.round(document.layout.fontSize * 1.5)}"/></w:rPr></w:style>${[1, 2, 3, 4, 5, 6].map((level) => `<w:style w:type="paragraph" w:styleId="Heading${level}"><w:name w:val="Heading ${level}"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="${level - 1}"/></w:pPr></w:style>`).join('')}${namedStyleXml}</w:styles>` })
-  files.push({ name: 'word/settings.xml', content: `${declaration}<w:settings xmlns:w="${w}">${mode === 'retain-review' ? '<w:trackRevisions/>' : ''}</w:settings>` })
+  const namedStyleXml=Object.entries(definitions).sort(([a],[b])=>a.localeCompare(b)).map(([id,definition])=>`<w:style w:type="${definition.kind??'paragraph'}" w:styleId="${xml(id)}"><w:name w:val="${xml(definition.label??id)}"/>${definition.basedOn?`<w:basedOn w:val="${xml(definition.basedOn)}"/>`:definition.kind==='character'&&definition.run.characterStyleId?`<w:basedOn w:val="${xml(definition.run.characterStyleId)}"/>`:''}${definition.kind==='character'?'':`<w:pPr>${paragraphProperties({...definition.paragraph,name:undefined,heading:undefined},'style:'+id)}${definition.paragraph.heading?`<w:outlineLvl w:val="${definition.paragraph.heading-1}"/>`:''}</w:pPr>`}<w:rPr>${styleXml(definition.kind==='character'?{...definition.run,characterStyleId:undefined}:definition.run)}</w:rPr></w:style>`).join('')
+  files.push({ name: 'word/styles.xml', content: `${declaration}<w:styles xmlns:w="${w}">${document.defaults?`<w:docDefaults><w:rPrDefault><w:rPr>${styleXml(document.defaults.run)}</w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>${paragraphProperties(document.defaults.paragraph,'defaults')}</w:pPr></w:pPrDefault></w:docDefaults>`:''}<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="${xml(document.layout.font)}" w:hAnsi="${xml(document.layout.font)}" w:eastAsia="${xml(document.layout.font)}" w:cs="${xml(document.layout.font)}"/><w:sz w:val="${Math.round(document.layout.fontSize * 1.5)}"/></w:rPr></w:style>${[1, 2, 3, 4, 5, 6].map((level) => `<w:style w:type="paragraph" w:styleId="Heading${level}"><w:name w:val="Heading ${level}"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="${level - 1}"/></w:pPr></w:style>`).join('')}${namedStyleXml}</w:styles>` })
+  files.push({ name: 'word/settings.xml', content: `${declaration}<w:settings xmlns:w="${w}">${mode === 'retain-review' ? '<w:trackRevisions/>' : ''}${document.compatibilityMode === undefined ? '' : `<w:compat><w:compatSetting w:val="${document.compatibilityMode}" w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word"/></w:compat>`}</w:settings>` })
   files.push({ name: 'word/_rels/document.xml.rels', content: `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${relationships.join('')}</Relationships>` })
   const bytes = await createZipBuffer(files); await validateDocxPackage(bytes,true); return bytes
 }

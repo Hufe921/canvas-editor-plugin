@@ -62,6 +62,12 @@ export function readTablePresentation(node: Element | undefined, lose: Loss): Ta
 }
 export function readCellPresentation(node: Element | undefined, lose: Loss): CellPresentation {
   const result: CellPresentation = {}
+  const width = child(node, 'tcW'); if (width) {
+    const type = attribute(width, 'type'); const source = attribute(width, 'w')
+    const value = Number(source) / (type === 'pct' ? 50 : type === 'dxa' ? 15 : 1)
+    if ((type === 'auto' || type === 'pct' || type === 'dxa') && source !== undefined && Number.isFinite(value) && value >= 0 && value <= (type === 'pct' ? 100 : 8192)) result.width = { type: type === 'pct' ? 'percent' : type === 'dxa' ? 'absolute' : 'auto', value }
+    else lose('SOURCE_CELL_WIDTH', 'Preferred cell width requires a bounded auto, percent or absolute value.')
+  }
   const borders = readBorders(child(node, 'tcBorders'), lose); if (borders) result.borders = borders
   const shading = readShading(child(node, 'shd'), lose); if (shading) result.shading = shading
   const margins = readMargins(child(node, 'tcMar'), lose); if (margins) result.margins = margins
@@ -69,14 +75,14 @@ export function readCellPresentation(node: Element | undefined, lose: Loss): Cel
   return result
 }
 export function bordersXml(borders: WordBorders, container: string): string {
-  const edges: Array<keyof WordBorders> = ['top', 'right', 'bottom', 'left', 'insideHorizontal', 'insideVertical']
+  const edges: Array<keyof WordBorders> = ['top', 'left', 'bottom', 'right', 'insideHorizontal', 'insideVertical']
   return `<w:${container}>` + edges.map(edge => {
     const border: WordBorder | undefined = borders[edge]; if (!border) return ''
     const name = edge === 'insideHorizontal' ? 'insideH' : edge === 'insideVertical' ? 'insideV' : edge
-    return `<w:${name} w:val="${border.style}" w:color="${border.color==='auto'?'auto':border.color.slice(1)}" w:sz="${Math.round(border.width * 8)}" w:space="${border.space}"/>`
+    return border.style === 'none' ? `<w:${name} w:val="none"/>` : `<w:${name} w:val="${border.style}" w:color="${border.color==='auto'?'auto':border.color.slice(1)}" w:sz="${Math.round(border.width * 8)}" w:space="${border.space}"/>`
   }).join('') + `</w:${container}>`
 }
 export const shadingXml = (fill: string) => `<w:shd w:val="clear" w:color="auto" w:fill="${fill.slice(1)}"/>`
 export function marginsXml(values: [number, number, number, number], container: string): string {
-  return `<w:${container}>` + ['top', 'right', 'bottom', 'left'].map((name, index) => `<w:${name} w:w="${Math.round((values[index] ?? 0) * 15)}" w:type="dxa"/>`).join('') + `</w:${container}>`
+  return `<w:${container}>` + [0,3,2,1].map(index => `<w:${['top','right','bottom','left'][index]} w:w="${Math.round((values[index] ?? 0) * 15)}" w:type="dxa"/>`).join('') + `</w:${container}>`
 }
