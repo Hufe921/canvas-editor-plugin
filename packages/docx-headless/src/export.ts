@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createZipBuffer, type ZipEntry } from './zipArchive'
-import { type WordDocument, type DocumentParagraph, type TextStyle, type DocumentView, type ParagraphStyle, type DocumentBlock, visibleParagraph, visibleRun, runStyle, paragraphsOf, paragraphStyle, cellBlocks, paragraphBoundaryVisible } from './model'
+import { type WordDocument, type DocumentChange, type DocumentParagraph, type TextStyle, type DocumentView, type ParagraphStyle, type DocumentBlock, visibleParagraph, visibleRun, runStyle, paragraphsOf, paragraphStyle, cellBlocks, paragraphBoundaryVisible } from './model'
 import { bordersXml, shadingXml, marginsXml } from './appearance'
 import { validateStyles,type WordStyleDefinitions } from './styles'
 import { composeWordStories, type WordStories } from './stories'
@@ -19,6 +19,8 @@ const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 const ns = `xmlns:w="${w}" xmlns:r="${r}" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"`
 const twips = (px: number) => Math.round(px * 15)
+function previousRunStyle(change: DocumentChange): TextStyle { if (!change.beforeStyle) throw new WordCodecError('DOCUMENT_INVALID', 'Run formatting revisions require a previous property snapshot.', 422); return change.beforeStyle }
+function previousParagraphStyle(change: DocumentChange): ParagraphStyle { if (!change.beforeParagraphStyle) throw new WordCodecError('DOCUMENT_INVALID', 'Paragraph formatting revisions require a previous property snapshot.', 422); return change.beforeParagraphStyle }
 function styleXml(style: TextStyle): string {
   // CT_RPr has a prescribed order; XML well-formedness alone cannot check it.
   return [
@@ -26,12 +28,15 @@ function styleXml(style: TextStyle): string {
     style.font ? `<w:rFonts w:ascii="${xml(style.font)}" w:hAnsi="${xml(style.font)}" w:eastAsia="${xml(style.font)}" w:cs="${xml(style.font)}"/>` : '',
     style.bold === undefined ? '' : style.bold ? '<w:b/><w:bCs/>' : '<w:b w:val="0"/><w:bCs w:val="0"/>',
     style.italic === undefined ? '' : style.italic ? '<w:i/><w:iCs/>' : '<w:i w:val="0"/><w:iCs w:val="0"/>',
+    style.allCaps === undefined ? '' : `<w:caps w:val="${style.allCaps ? '1' : '0'}"/>`,
+    style.smallCaps === undefined ? '' : `<w:smallCaps w:val="${style.smallCaps ? '1' : '0'}"/>`,
     style.strikeout === undefined ? '' : `<w:strike w:val="${style.strikeout ? '1' : '0'}"/>`,
     style.color ? `<w:color w:val="${style.color.slice(1)}"/>` : '',
     style.characterSpacing === undefined ? '' : `<w:spacing w:val="${twips(style.characterSpacing)}"/>`,
     style.size ? `<w:sz w:val="${Math.round(style.size * 1.5)}"/><w:szCs w:val="${Math.round(style.size * 1.5)}"/>` : '',
     style.underline === undefined ? '' : `<w:u w:val="${style.underline ? 'single' : 'none'}"/>`,
     style.highlight ? `<w:shd w:fill="${style.highlight.slice(1)}"/>` : '',
+    style.verticalAlignment ? `<w:vertAlign w:val="${style.verticalAlignment}"/>` : '',
   ].join('')
 }
 /** Headless OOXML generation. No DOM, download, browser cookies or remote fetches. */
@@ -90,6 +95,7 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
       style.list ? `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${listIds.get(blockId+':'+style.list)}"/></w:numPr>` : '',
       style.borders?bordersXml(style.borders,'pBdr'):'',
       style.shading?shadingXml(style.shading):'',
+      style.tabs === undefined ? '' : `<w:tabs>${style.tabs.map(tab => `<w:tab w:val="${tab.alignment}" w:pos="${twips(tab.position)}"${tab.leader === undefined ? '' : ` w:leader="${tab.leader}"`}/>`).join('')}</w:tabs>`,
       style.lineSpacing!==undefined||style.before!==undefined||style.after!==undefined?`<w:spacing${style.lineSpacing===undefined?'':` w:line="${Math.round(style.lineSpacing*(style.lineRule==='exact'||style.lineRule==='atLeast'?15:240))}" w:lineRule="${style.lineRule??'auto'}"`}${style.before===undefined?'':` w:before="${twips(style.before)}"`}${style.after===undefined?'':` w:after="${twips(style.after)}"`}/>`:'',
       style.indent!==undefined||style.rightIndent!==undefined||style.firstLineIndent!==undefined?`<w:ind${style.indent===undefined?'':` w:left="${twips(style.indent)}"`}${style.rightIndent===undefined?'':` w:right="${twips(style.rightIndent)}"`}${style.firstLineIndent===undefined?'':` ${style.firstLineIndent<0?'w:hanging':'w:firstLine'}="${twips(Math.abs(style.firstLineIndent))}"`}/>`:'',
       style.alignment ? `<w:jc w:val="${style.alignment === 'justify' ? 'both' : style.alignment}"/>` : '',
@@ -117,7 +123,7 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
     const formatting=document.changes.find((change)=>change.kind==='paragraphFormat'&&change.status==='pending'&&change.targetBlockIds?.includes(block.id))
     const boundary=document.changes.find((change)=>change.id===block.boundaryChangeId&&change.status==='pending'&&['paragraphSplit','paragraphJoin'].includes(change.kind))
     const boundaryRevision=mode==='retain-review'&&boundary?`<w:rPr><w:${boundary.kind==='paragraphSplit'?'ins':'del'} w:id="${revisionId++}" w:author="${xml(boundary.importedAuthor??boundary.authorName)}" w:date="${boundary.createdAt}"/></w:rPr>`:''
-    const formatRevision=mode==='retain-review'&&formatting?`<w:pPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:pPr>${paragraphProperties(formatting.beforeParagraphStyle??{},block.id)}</w:pPr></w:pPrChange>`:''
+    const formatRevision=mode==='retain-review'&&formatting?`<w:pPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:pPr>${paragraphProperties(previousParagraphStyle(formatting),block.id)}</w:pPr></w:pPrChange>`:''
     const visibleRuns=block.runs.filter((run)=>visibleRun(run,document.changes,view))
     const empty=visibleRuns.every((run)=>!run.text&&!run.inlineImage)
     const lineStyle=empty?{font:document.layout.font,size:document.layout.fontSize,...effectiveRunStyle(visibleRuns.find((run)=>!run.inlineImage)??{id:'empty-line-box',text:'',style:{}},block)}:undefined
@@ -149,11 +155,11 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
         if (index === offsets.length - 1) continue
         const text = run.text.slice(offset, offsets[index + 1])
         const textXml = text.split(/(\n|\t)/).map((part) => part === '\n' ? '<w:br/>' : part === '\t' ? '<w:tab/>' : `<w:${tag} xml:space="preserve">${xml(part)}</w:${tag}>`).join('')
-        const formatChange = native && formatting ? `<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor ?? formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(formatting.beforeStyle ?? {}):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>` : ''
+        const formatChange = native && formatting ? `<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor ?? formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(previousRunStyle(formatting)):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>` : ''
         content += `<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}${formatChange}</w:rPr>${textXml}</w:r>`
       }
       if (run.field === 'pageNumber') content += `<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}</w:rPr><w:fldChar w:fldCharType="begin"/><w:instrText xml:space="preserve">PAGE</w:instrText><w:fldChar w:fldCharType="separate"/><w:fldChar w:fldCharType="end"/></w:r>`
-      if (!run.text && !run.inlineImage && !run.field) {const formatChange=native&&formatting?`<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(formatting.beforeStyle??{}):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>`:'';content+=`<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}${formatChange}</w:rPr><w:${tag} xml:space="preserve"></w:${tag}></w:r>`}
+      if (!run.text && !run.inlineImage && !run.field) {const formatChange=native&&formatting?`<w:rPrChange w:id="${revisionId++}" w:author="${xml(formatting.importedAuthor??formatting.authorName)}" w:date="${formatting.createdAt}"><w:rPr>${styleXml(story==='main'?(previousRunStyle(formatting)):effectiveRunStyle(run,block,'original'))}</w:rPr></w:rPrChange>`:'';content+=`<w:r><w:rPr>${styleXml(story==='main'?runStyle(run,document.changes,view):effectiveRunStyle(run,block))}${formatChange}</w:rPr><w:${tag} xml:space="preserve"></w:${tag}></w:r>`}
       if (run.inlineImage) content += imageRun({ id: run.id, ...run.inlineImage })
       const hyperlink = effectiveRunStyle(run,block).hyperlink
       if (hyperlink) { const id = relation('hyperlink', hyperlink, true); content = `<w:hyperlink r:id="${id}">${content}</w:hyperlink>` }

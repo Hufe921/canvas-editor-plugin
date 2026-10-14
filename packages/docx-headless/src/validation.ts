@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_DOCUMENT_BYTES, type WordDocument, type DocumentBlock, paragraphsOf, exchangeDocument, allBlocks, cellBlocks } from './model'
+import { MAX_DOCUMENT_BYTES, type WordDocument, type DocumentBlock, type DocumentRun, paragraphsOf, exchangeDocument, allBlocks, cellBlocks } from './model'
 import { WordCodecError } from './errors'
 const identifier = z.string().min(1).max(128).regex(/^[a-zA-Z0-9_.:-]+$/)
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/)
@@ -14,9 +14,10 @@ const textStyle = z.object({
   characterSpacing: z.number().min(-20).max(100).optional(),
   font: z.string().min(1).max(100).optional(), size: z.number().min(2 / 3).max(144).optional(),
   bold: z.boolean().optional(), italic: z.boolean().optional(), underline: z.boolean().optional(), strikeout: z.boolean().optional(),
+  smallCaps: z.boolean().optional(), allCaps: z.boolean().optional(), verticalAlignment: z.enum(['baseline', 'superscript', 'subscript']).optional(),
   color: color.optional(), highlight: color.optional(), hyperlink: z.string().max(2048).url().refine((value) => /^https?:\/\//i.test(value), 'Only HTTP(S) hyperlinks are supported').optional(),
 }).strict()
-const paragraphStyle = z.object({ name: z.string().max(100).optional(), alignment: z.enum(['left', 'center', 'right', 'justify']).optional(), lineSpacing: z.number().positive().max(500).optional(), lineRule: z.enum(['auto', 'exact', 'atLeast']).optional(), rightIndent: z.number().min(-500).max(500).optional(), keepTogether: z.boolean().optional(), widowControl: z.boolean().optional(), shading: color.optional(), borders: borders.optional(), before: z.number().min(0).max(500).optional(), after: z.number().min(0).max(500).optional(), indent: z.number().min(-500).max(500).optional(), firstLineIndent: z.number().min(-500).max(500).optional(), keepWithNext: z.boolean().optional(), pageBreakBefore: z.boolean().optional(), heading: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]).optional(), list: z.enum(['bullet', 'number']).optional() }).strict().refine(style => style.lineSpacing === undefined || style.lineRule === 'exact' || style.lineRule === 'atLeast' || style.lineSpacing >= 0.5 && style.lineSpacing <= 5, 'Automatic line spacing requires a multiplier between 0.5 and 5')
+const paragraphStyle = z.object({ name: z.string().max(100).optional(), alignment: z.enum(['left', 'center', 'right', 'justify']).optional(), lineSpacing: z.number().positive().max(500).optional(), lineRule: z.enum(['auto', 'exact', 'atLeast']).optional(), rightIndent: z.number().min(-500).max(500).optional(), keepTogether: z.boolean().optional(), widowControl: z.boolean().optional(), shading: color.optional(), borders: borders.optional(), before: z.number().min(0).max(500).optional(), after: z.number().min(0).max(500).optional(), indent: z.number().min(-500).max(500).optional(), firstLineIndent: z.number().min(-500).max(500).optional(), keepWithNext: z.boolean().optional(), pageBreakBefore: z.boolean().optional(), heading: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]).optional(), list: z.enum(['bullet', 'number']).optional(), tabs: z.array(z.object({ alignment: z.enum(['left', 'center', 'right', 'decimal', 'bar', 'clear', 'num']), position: z.number().min(-8192).max(8192).refine(value => Math.abs(value * 15 - Math.round(value * 15)) < 1e-8, 'Tab positions require exact twip distances'), leader: z.enum(['none', 'dot', 'hyphen', 'underscore', 'heavy', 'middleDot']).optional() }).strict()).max(128).refine(tabs => new Set(tabs.map(tab => tab.position)).size === tabs.length, 'Tab stop positions must be unique').optional() }).strict().refine(style => style.lineSpacing === undefined || style.lineRule === 'exact' || style.lineRule === 'atLeast' || style.lineSpacing >= 0.5 && style.lineSpacing <= 5, 'Automatic line spacing requires a multiplier between 0.5 and 5')
 const inlineImage = z.object({ assetId: z.number().int().positive(), sha256: z.string().regex(/^[a-f0-9]{64}$/), alt: z.string().max(2000), width: z.number().positive().max(16384), height: z.number().positive().max(16384) }).strict()
 const paragraph = z.object({
   type: z.literal('paragraph'), id: identifier, changeId: identifier.optional(), boundaryChangeId: identifier.optional(),
@@ -56,7 +57,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
   validateUnicode(document)
   const ids = new Set<string>()
   const add = (id: string) => { if (ids.has(id)) throw new Error('Duplicate document identity'); ids.add(id) }
-  const runs = new Map<string, { text: string; blockId: string; protected: boolean }>()
+  const runs = new Map<string, { run: DocumentRun; text: string; blockId: string; protected: boolean }>()
   for (const block of allBlocks(document.blocks)) {
     if (block.type !== 'paragraph') add(block.id)
     if (block.type === 'table') {
@@ -68,7 +69,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
     for (const run of block.runs) {
       add(run.id)
       if (run.inlineImage && (run.text !== '' || Object.keys(run.style).length)) throw new Error('Inline images require a protected empty text/style run')
-      runs.set(run.id, { text: run.text, blockId: block.id, protected: Boolean(run.field || run.inlineImage) })
+      runs.set(run.id, { run, text: run.text, blockId: block.id, protected: Boolean(run.field || run.inlineImage) })
     }
   }
   const paragraphIds = new Set(paragraphsOf(document, true).map((block) => block.id))
@@ -81,10 +82,21 @@ function validateExchangeDocument(raw: unknown): WordDocument {
   story(document.layout.header); story(document.layout.footer)
   for (const block of allBlocks(document.blocks)) if (block.type === 'table') for (const row of block.rows) for (const cell of row.cells) boundaries(cellBlocks(cell))
   const paragraphFormats = new Set<string>()
+  const runFormats = new Set<string>()
   for (const change of document.changes) {
     add(change.id); if (change.targetRunIds.some((id) => !runs.has(id)) || change.targetBlockIds?.some((id) => !paragraphIds.has(id))) throw new Error('Change target does not exist')
     if (change.targetRunIds.some(id => runs.get(id)?.protected)) throw new Error('Review cannot target protected fields or images')
     if (new Set(change.targetRunIds).size !== change.targetRunIds.length || new Set(change.targetBlockIds).size !== (change.targetBlockIds?.length ?? 0)) throw new Error('Duplicate change target')
+    if (['insertion', 'deletion', 'format'].includes(change.kind) && (!change.targetRunIds.length || change.targetBlockIds?.length)) throw new Error('Run revisions require nonempty run targets and no paragraph targets')
+    if (['insertion', 'deletion'].includes(change.kind) && change.status === 'pending' && change.targetRunIds.some(id => runs.get(id)?.run.changeId !== change.id)) throw new Error('Pending insertion/deletion review requires matching run links')
+    if (change.kind === 'format') {
+      if (!change.beforeStyle || !change.afterStyle) throw new Error('Run formatting revisions require both property snapshots')
+      for (const id of change.targetRunIds) if (change.status === 'pending') {
+        if (runFormats.has(id)) throw new Error('Overlapping run formatting revisions')
+        runFormats.add(id)
+        if (exchangeDocument(runs.get(id)?.run.style) !== exchangeDocument(change.afterStyle)) throw new Error('Pending run formatting differs from proposed properties')
+      }
+    }
     if (change.kind.startsWith('paragraph') && (!change.targetBlockIds?.length || change.targetRunIds.length)) throw new Error('Paragraph revisions require paragraph targets')
     if (['paragraphInsertion', 'paragraphDeletion'].includes(change.kind) && change.status === 'pending' && change.targetBlockIds?.some((id) => paragraphsOf(document, true).find((block) => block.id === id)?.changeId !== change.id)) throw new Error('Pending paragraph review links cannot be discarded')
     if (change.kind === 'paragraphFormat') {
@@ -102,7 +114,7 @@ function validateExchangeDocument(raw: unknown): WordDocument {
   for (const block of paragraphsOf(document, true)) if (block.changeId && !document.changes.some((change) => change.id === block.changeId && ['paragraphInsertion', 'paragraphDeletion'].includes(change.kind) && change.targetBlockIds?.includes(block.id))) throw new Error('Missing paragraph change')
   for (const block of paragraphsOf(document, true)) if (block.boundaryChangeId && !document.changes.some((change) => change.id === block.boundaryChangeId && (change.kind === 'paragraphSplit' || change.kind === 'paragraphJoin') && change.targetBlockIds?.[0] === block.id)) throw new Error('Missing paragraph mark change')
   for (const block of paragraphsOf(document, true)) for (const run of block.runs) {
-    if (run.changeId && !document.changes.some((change) => change.id === run.changeId && change.targetRunIds.includes(run.id))) throw new Error('Missing run change')
+    if (run.changeId && !document.changes.some((change) => change.id === run.changeId && ['insertion', 'deletion'].includes(change.kind) && change.targetRunIds.includes(run.id))) throw new Error('Run change links require a matching insertion/deletion record')
   }
   for (const comment of document.comments) {
     add(comment.id)

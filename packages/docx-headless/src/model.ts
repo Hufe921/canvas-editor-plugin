@@ -9,6 +9,10 @@ export interface TextStyle {
   characterSpacing?: number;
   bold?: boolean;
   italic?: boolean;
+  smallCaps?: boolean;
+  allCaps?: boolean;
+  /** Explicit baseline resets an inherited superscript/subscript style. */
+  verticalAlignment?: 'baseline' | 'superscript' | 'subscript';
   underline?: boolean;
   strikeout?: boolean;
   color?: string;
@@ -33,6 +37,9 @@ export interface ParagraphStyle {
   pageBreakBefore?: boolean;
   heading?: 1 | 2 | 3 | 4 | 5 | 6;
   list?: 'bullet' | 'number';
+  /** Positions are signed CSS pixels relative to the paragraph's text margin.
+   * Clear stops preserve removals of inherited tab positions. */
+  tabs?: Array<{ alignment: 'left' | 'center' | 'right' | 'decimal' | 'bar' | 'clear' | 'num'; position: number; leader?: 'none' | 'dot' | 'hyphen' | 'underscore' | 'heavy' | 'middleDot' }>;
 }
 export interface WordBorder { style: 'none' | 'single' | 'double' | 'dashed' | 'dotted'; color: string; width: number; space: number }
 export interface WordBorders { top?: WordBorder; right?: WordBorder; bottom?: WordBorder; left?: WordBorder; insideHorizontal?: WordBorder; insideVertical?: WordBorder }
@@ -156,7 +163,8 @@ export function visibleParagraph(block: DocumentParagraph, changes: DocumentChan
 }
 export function paragraphStyle(block: DocumentParagraph, changes: DocumentChange[], view: DocumentView): ParagraphStyle {
   const change = changes.find((item) => item.kind === 'paragraphFormat' && item.targetBlockIds?.includes(block.id) && item.status === 'pending')
-  return change && view === 'original' ? change.beforeParagraphStyle ?? block.style : block.style
+  if (change && view === 'original') { if (!change.beforeParagraphStyle) throw new Error('Paragraph formatting revision has no previous property snapshot'); return change.beforeParagraphStyle }
+  return block.style
 }
 /** Physical identities remain stable even when a projected paragraph mark is absent. */
 export function paragraphBoundaryVisible(left: DocumentParagraph, right: DocumentParagraph, changes: DocumentChange[], view: DocumentView): boolean {
@@ -185,7 +193,8 @@ export function visibleRun(run: DocumentRun, changes: DocumentChange[], view: Do
 }
 export function runStyle(run: DocumentRun, changes: DocumentChange[], view: DocumentView): TextStyle {
   const change = changes.find((item) => item.kind === 'format' && item.targetRunIds.includes(run.id) && item.status === 'pending')
-  return change && view === 'original' ? change.beforeStyle ?? run.style : run.style
+  if (change && view === 'original') { if (!change.beforeStyle) throw new Error('Run formatting revision has no previous property snapshot'); return change.beforeStyle }
+  return run.style
 }
 
 export function logicalParagraphs(paragraphs:DocumentParagraph[],changes:DocumentChange[],view:DocumentView):DocumentParagraph[]{return paragraphGroups(paragraphs,changes,view).map((group)=>({...group[0],style:paragraphStyle(group[0],changes,view),runs:group.flatMap((block)=>block.runs)}))}

@@ -1,4 +1,5 @@
 import {documentTheme} from './theme'
+import { auditWordProperties, readTextTypography, readTabStops } from './typography'
 import { readEmbeddedFonts, type WordEmbeddedFont } from './fonts'
 import { readBorders, readShading, readTablePresentation, readCellPresentation } from './appearance'
 import { validateStyles,importedStyleId,type WordStyleDefinitions } from './styles'
@@ -94,6 +95,12 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   const paragraphOrder = ['pStyle','keepNext','keepLines','pageBreakBefore','framePr','widowControl','numPr','suppressLineNumbers','pBdr','shd','tabs','suppressAutoHyphens','kinsoku','wordWrap','overflowPunct','topLinePunct','autoSpaceDE','autoSpaceDN','bidi','adjustRightInd','snapToGrid','spacing','ind','contextualSpacing','mirrorIndents','suppressOverlap','jc','textDirection','textAlignment','textboxTightWrap','outlineLvl','divId','cnfStyle','rPr','sectPr','pPrChange']
   for (const [name, content] of files) if (name.startsWith('word/') && name.endsWith('.xml')) {
     const part = parseDocumentXml(content)
+    auditWordProperties(part, lose, new Set(Object.keys(unsupported)))
+    for (const stop of Array.from(part.getElementsByTagNameNS(w, 'defaultTabStop'))) if (val(stop) !== '720') lose('SOURCE_DEFAULT_TAB_STOP', 'Custom document-wide default tab intervals are not represented; exact spacing remains only in the original.')
+    for (const level of Array.from(part.getElementsByTagNameNS(w, 'lvl'))) {
+      const properties = child(level, 'pPr'); const tabs = properties ? child(properties, 'tabs') : undefined
+      if (tabs && (direct(tabs, 'tab').length !== 1 || direct(tabs, 'tab').some(stop => val(stop) !== 'num' || val(stop, 'pos') !== '720' || val(stop, 'leader') !== null && val(stop, 'leader') !== 'none'))) lose('SOURCE_NUMBERING_TABS', 'Custom numbering-level tab stops are not retained by flat list conversion; source numbering remains in the original.')
+    }
     for(const name of Object.keys(unsupported)){const count=Array.from(part.getElementsByTagNameNS(w,name)).filter(element=>!['bidi','rtl','titlePg','evenAndOddHeaders'].includes(name)||!['0','false','off'].includes(val(element)??'')).length;if(count)unsupportedCounts.set(name,(unsupportedCounts.get(name)??0)+count)}
     for (const properties of Array.from(part.getElementsByTagNameNS(w, 'trPr'))) if (child(properties, 'trHeight')) lose('SOURCE_ROW_HEIGHT', 'Fixed or minimum row height requires explicit conversion handling.')
     for (const columns of Array.from(part.getElementsByTagNameNS(w,'cols'))) if (direct(columns,'col').length || columns.getAttributeNS(w,'equalWidth') === '0') lose('UNEQUAL_COLUMN_LAYOUT','Unequal column widths require explicit redesign; equal-width print columns are preserved.')
@@ -111,6 +118,8 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     for (const kind of ['rPrChange', 'pPrChange']) {
       const seen = new Set<string>()
       for (const revision of Array.from(part.getElementsByTagNameNS(w, kind))) {
+        const properties = kind === 'rPrChange' ? 'rPr' : 'pPr'
+        if (direct(revision, properties).length !== 1 || revision.parentNode?.namespaceURI !== w || revision.parentNode.localName !== properties) throw new WordCodecError('DOCUMENT_IMPORT_REVIEW_SNAPSHOT_INCOMPLETE', 'Formatting revisions require exactly one explicit previous property snapshot in the matching current property container.', 422)
         const id = revision.getAttributeNS(w, 'id')
         if (!id || seen.has(id)) lose('SOURCE_REVISION_IDENTIFIER', 'Source property-revision identifiers are missing or duplicated within a Word part. Distinct converted records receive new canonical identities; original identifiers remain preserved and are not claimed to survive exactly.')
         if (id) seen.add(id)
@@ -151,6 +160,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     if (!node) return {}
     const character=val(child(node,'rStyle'))
     const style: TextStyle = {...(resolveReferences&&character?styles.get(character)?.run:{}),...(character?{characterStyleId:character}: {})}
+    Object.assign(style, readTextTypography(node))
     const fonts=child(node,'rFonts');const font=fonts?.getAttributeNS(w,'ascii')??fonts?.getAttributeNS(w,'hAnsi');const themeFont=fonts?.getAttributeNS(w,'asciiTheme')??fonts?.getAttributeNS(w,'hAnsiTheme')
     if(font)style.font=font;if(themeFont){const resolved=theme.font(themeFont);if(resolved){if(font&&font!==resolved)lose('FONT_THEME_CONFLICT','Source run assigns differing explicit and theme fonts in one property set. Conversion retains the resolved primary theme snapshot; source font association/precedence differences remain in the original and exact cross-application typography is not claimed.');style.font=resolved}}
     if(fonts&&(fonts.getAttributeNS(w,'eastAsiaTheme')||fonts.getAttributeNS(w,'cstheme')||fonts.getAttributeNS(w,'eastAsia')&&fonts.getAttributeNS(w,'eastAsia')!==font||fonts.getAttributeNS(w,'cs')&&fonts.getAttributeNS(w,'cs')!==font||fonts.getAttributeNS(w,'hAnsiTheme')&&themeFont?.replace(/(?:Ascii|HAnsi)$/,'Latin')!==fonts.getAttributeNS(w,'hAnsiTheme')?.replace(/(?:Ascii|HAnsi)$/,'Latin')||fonts.getAttributeNS(w,'hAnsi')&&font!==fonts.getAttributeNS(w,'hAnsi')))lose('MULTISCRIPT_FONT_MAPPING','Separate Latin, East Asian and complex-script font slots are not represented independently; the resolved primary Latin font is retained.')
@@ -224,6 +234,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
         lose('CUSTOM_STYLE', `Undefined style ${id} uses resolved direct formatting.`)
     }
     const outline=val(child(node,'outlineLvl'));if(outline!==null&&Number(outline)>=0&&Number(outline)<6)style.heading=(Number(outline)+1) as ParagraphStyle['heading']
+    const tabs = readTabStops(node); if (tabs !== undefined) style.tabs = tabs
     const alignment = val(child(node, 'jc'))
     if (alignment && ['left', 'center', 'right', 'both', 'start', 'end'].includes(alignment))
       style.alignment =
