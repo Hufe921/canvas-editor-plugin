@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { createZipBuffer, type ZipEntry } from './zipArchive'
-import { type WordDocument, type DocumentParagraph, type TextStyle, type DocumentView, type ParagraphStyle, type DocumentBlock, visibleParagraph, visibleRun, runStyle, paragraphsOf, paragraphStyle, logicalParagraphs, paragraphBoundaryVisible } from './model'
+import { type WordDocument, type DocumentParagraph, type TextStyle, type DocumentView, type ParagraphStyle, type DocumentBlock, visibleParagraph, visibleRun, runStyle, paragraphsOf, paragraphStyle, cellBlocks, paragraphBoundaryVisible } from './model'
+import { bordersXml, shadingXml, marginsXml } from './appearance'
 import { validateStyles,type WordStyleDefinitions } from './styles'
 import { composeWordStories, type WordStories } from './stories'
 import { WordCodecError } from './errors'
@@ -77,10 +78,14 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   const paragraphProperties=(style:ParagraphStyle,blockId:string):string=>[
       style.heading ? `<w:pStyle w:val="Heading${style.heading}"/>` : style.name ? `<w:pStyle w:val="${xml(style.name)}"/>` : '',
       style.keepWithNext===undefined?'':`<w:keepNext w:val="${style.keepWithNext?'1':'0'}"/>`,
+      style.keepTogether===undefined?'':`<w:keepLines w:val="${style.keepTogether?'1':'0'}"/>`,
       style.pageBreakBefore===undefined?'':`<w:pageBreakBefore w:val="${style.pageBreakBefore?'1':'0'}"/>`,
+      style.widowControl===undefined?'':`<w:widowControl w:val="${style.widowControl?'1':'0'}"/>`,
       style.list ? `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${listIds.get(blockId+':'+style.list)}"/></w:numPr>` : '',
-      style.lineSpacing!==undefined||style.before!==undefined||style.after!==undefined?`<w:spacing${style.lineSpacing===undefined?'':` w:line="${Math.round(style.lineSpacing*240)}" w:lineRule="auto"`}${style.before===undefined?'':` w:before="${twips(style.before)}"`}${style.after===undefined?'':` w:after="${twips(style.after)}"`}/>`:'',
-      style.indent!==undefined||style.firstLineIndent!==undefined?`<w:ind${style.indent===undefined?'':` w:left="${twips(style.indent)}"`}${style.firstLineIndent===undefined?'':` ${style.firstLineIndent<0?'w:hanging':'w:firstLine'}="${twips(Math.abs(style.firstLineIndent))}"`}/>`:'',
+      style.borders?bordersXml(style.borders,'pBdr'):'',
+      style.shading?shadingXml(style.shading):'',
+      style.lineSpacing!==undefined||style.before!==undefined||style.after!==undefined?`<w:spacing${style.lineSpacing===undefined?'':` w:line="${Math.round(style.lineSpacing*(style.lineRule==='exact'||style.lineRule==='atLeast'?15:240))}" w:lineRule="${style.lineRule??'auto'}"`}${style.before===undefined?'':` w:before="${twips(style.before)}"`}${style.after===undefined?'':` w:after="${twips(style.after)}"`}/>`:'',
+      style.indent!==undefined||style.rightIndent!==undefined||style.firstLineIndent!==undefined?`<w:ind${style.indent===undefined?'':` w:left="${twips(style.indent)}"`}${style.rightIndent===undefined?'':` w:right="${twips(style.rightIndent)}"`}${style.firstLineIndent===undefined?'':` ${style.firstLineIndent<0?'w:hanging':'w:firstLine'}="${twips(Math.abs(style.firstLineIndent))}"`}/>`:'',
       style.alignment ? `<w:jc w:val="${style.alignment === 'justify' ? 'both' : style.alignment}"/>` : '',
     ].join('')
   const imageRun = (block: { id: string; assetId: number; sha256: string; alt: string; width: number; height: number }): string => {
@@ -156,7 +161,19 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
   for (const [index,block] of blocks.entries()) {
     if (block.type === 'paragraph') { const previous=blocks[index-1];if(previous?.type==='paragraph'&&visibleParagraph(previous,document.changes,view)&&!paragraphBoundaryVisible(previous,block,document.changes,view))continue;const group:DocumentParagraph[]=[block];let next=index+1;while(blocks[next]?.type==='paragraph'&&visibleParagraph(blocks[next] as DocumentParagraph,document.changes,view)&&!paragraphBoundaryVisible(group.at(-1)!,blocks[next] as DocumentParagraph,document.changes,view))group.push(blocks[next++] as DocumentParagraph);body.push(paragraph({...block,runs:group.flatMap((item)=>item.runs)})) }
     else if (block.type === 'pageBreak') body.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
-    else if (block.type === 'table') body.push(`<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid>${block.widths.map((width) => `<w:gridCol w:w="${twips(width)}"/>`).join('')}</w:tblGrid>${block.rows.map((row) => `<w:tr>${row.cells.map((cell, index) => `<w:tc><w:tcPr><w:tcW w:w="${twips(block.widths[index])}" w:type="dxa"/></w:tcPr>${logicalParagraphs(cell.paragraphs,document.changes,view).map(paragraph).join('')}</w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`)
+    else if (block.type === 'table') {
+      const appearance = block.presentation ?? {}; const width = appearance.width
+      const properties = `<w:tblW w:w="${width?Math.round(width.value*(width.type==='percent'?50:width.type==='absolute'?15:1)):0}" w:type="${width?.type==='percent'?'pct':width?.type==='absolute'?'dxa':'auto'}"/>` + (appearance.alignment?`<w:jc w:val="${appearance.alignment}"/>`:'') + (appearance.indent===undefined?'':`<w:tblInd w:w="${twips(appearance.indent)}" w:type="dxa"/>`) + (appearance.borders?bordersXml(appearance.borders,'tblBorders'):'') + (appearance.shading?shadingXml(appearance.shading):'') + (appearance.layout?`<w:tblLayout w:type="${appearance.layout==='auto'?'autofit':'fixed'}"/>`:'') + (appearance.margins?marginsXml(appearance.margins,'tblCellMar'):'')
+      body.push(`<w:tbl><w:tblPr>${properties}</w:tblPr><w:tblGrid>${block.widths.map(width => `<w:gridCol w:w="${twips(width)}"/>`).join('')}</w:tblGrid>${block.rows.map(row => {
+        const properties = (row.keepTogether===undefined?'':`<w:cantSplit w:val="${row.keepTogether?'1':'0'}"/>`) + (row.repeatHeader===undefined?'':`<w:tblHeader w:val="${row.repeatHeader?'1':'0'}"/>`)
+        return `<w:tr>${properties?`<w:trPr>${properties}</w:trPr>`:''}${row.cells.map((cell,index) => {
+          const appearance = cell.presentation ?? {}; const width = block.widths[index]; if (width===undefined) throw new WordCodecError('EXPORT_TABLE_GRID','Cell has no table-grid width.',422)
+          const properties = `<w:tcW w:w="${twips(width)}" w:type="dxa"/>` + (appearance.borders?bordersXml(appearance.borders,'tcBorders'):'') + (appearance.shading?shadingXml(appearance.shading):'') + (appearance.margins?marginsXml(appearance.margins,'tcMar'):'') + (appearance.verticalAlignment?`<w:vAlign w:val="${appearance.verticalAlignment}"/>`:'')
+          const blocks = cellBlocks(cell); const content = renderBlocks(blocks).join(''); const last = blocks.at(-1)
+          return `<w:tc><w:tcPr>${properties}</w:tcPr>${content}${last?.type==='paragraph'?'':'<w:p/>'}</w:tc>`
+        }).join('')}</w:tr>`
+      }).join('')}</w:tbl>`)
+    }
     else {
       body.push(`<w:p>${imageRun(block)}</w:p>`)
     }
@@ -176,7 +193,7 @@ export async function exportDocx(raw: WordDocument, mode: ExportMode, assets: Ma
     files.push({ name: 'word/comments.xml', content: `${declaration}<w:comments xmlns:w="${w}">${document.comments.map((comment) => `<w:comment w:id="${commentIds.get(comment.id)}" w:author="${xml(comment.importedAuthor ?? comment.authorName)}" w:date="${comment.createdAt}"><w:p><w:r><w:t xml:space="preserve">${xml(comment.text)}</w:t></w:r></w:p></w:comment>`).join('')}</w:comments>` })
   }
   const [top, right, bottom, left] = document.layout.margins
-  body.push(`<w:sectPr><w:headerReference w:type="default" r:id="${headerId}"/><w:footerReference w:type="default" r:id="${footerId}"/><w:pgSz w:w="${twips(document.layout.width)}" w:h="${twips(document.layout.height)}"${document.layout.width > document.layout.height ? ' w:orient="landscape"' : ''}/><w:pgMar w:top="${twips(top)}" w:right="${twips(right)}" w:bottom="${twips(bottom)}" w:left="${twips(left)}" w:header="360" w:footer="360" w:gutter="0"/>${document.layout.columns ? `<w:cols w:num="${document.layout.columns.count}" w:space="${twips(document.layout.columns.gap)}" w:equalWidth="1"/>` : ''}</w:sectPr>`)
+  body.push(`<w:sectPr><w:headerReference w:type="default" r:id="${headerId}"/><w:footerReference w:type="default" r:id="${footerId}"/><w:pgSz w:w="${twips(document.layout.width)}" w:h="${twips(document.layout.height)}"${document.layout.width > document.layout.height ? ' w:orient="landscape"' : ''}/><w:pgMar w:top="${twips(top)}" w:right="${twips(right)}" w:bottom="${twips(bottom)}" w:left="${twips(left)}" w:header="${twips(document.layout.headerDistance??24)}" w:footer="${twips(document.layout.footerDistance??24)}" w:gutter="${twips(document.layout.gutter??0)}"/>${document.layout.columns ? `<w:cols w:num="${document.layout.columns.count}" w:space="${twips(document.layout.columns.gap)}" w:equalWidth="1"/>` : ''}</w:sectPr>`)
   const overrides = ['document', 'styles', 'settings', 'comments', 'numbering'].filter((name) => (name !== 'comments' || mode === 'retain-review' && document.comments.length) && (name !== 'numbering' || listKinds.length)).map((name) => `<Override PartName="/word/${name}.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${name === 'document' ? 'document.main' : name}+xml"/>`).join('')
   files.push({ name: '[Content_Types].xml', content: `${declaration}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/>${overrides}<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>` })
   files.push({ name: '_rels/.rels', content: `${declaration}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${r}/officeDocument" Target="word/document.xml"/></Relationships>` })

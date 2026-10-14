@@ -1,4 +1,5 @@
 import {documentTheme} from './theme'
+import { readBorders, readShading, readTablePresentation, readCellPresentation } from './appearance'
 import { validateStyles,importedStyleId,type WordStyleDefinitions } from './styles'
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
@@ -14,6 +15,8 @@ import {
   type DocumentBlock,
   defaultLayout,
   paragraphsOf,
+  allBlocks,
+  cellBlocks,
 } from './model'
 import { validateDocument } from './validation'
 import { WordCodecError } from './errors'
@@ -45,7 +48,7 @@ export interface DocxIncomingAsset {
   width: number;
   height: number;
 }
-export interface DocxSection { start: number; end: number; document: WordDocument; stories?: {header?:WordDocument;footer?:WordDocument} }
+export interface DocxSection { start: number; end: number; breakAfter?: 'continuous' | 'nextPage'; document: WordDocument; stories?: {header?:WordDocument;footer?:WordDocument} }
 export interface DocxConversion { document:WordDocument; sections: DocxSection[]; styleDefinitions:WordStyleDefinitions; assets:DocxIncomingAsset[]; losses:Array<{code:string;count:number;message:string}>; detected:Array<{feature:string;count:number}> }
 /** Authoritative bounded conversion reads only validated local package parts.
  * No browser ZIP loader, network fetch, scripts, fields or external images run. */
@@ -91,10 +94,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   for (const [name, content] of files) if (name.startsWith('word/') && name.endsWith('.xml')) {
     const part = parseDocumentXml(content)
     for(const name of Object.keys(unsupported)){const count=part.getElementsByTagNameNS(w,name).length;if(count)unsupportedCounts.set(name,(unsupportedCounts.get(name)??0)+count)}
-    const tableAppearance = [...Array.from(part.getElementsByTagNameNS(w, 'tblPr')), ...Array.from(part.getElementsByTagNameNS(w, 'tcPr'))].filter(properties => child(properties, 'tblBorders') || child(properties, 'tcBorders') || child(properties, 'shd') || child(properties, 'tcMar'))
-    if (tableAppearance.length) lose('DIRECT_TABLE_APPEARANCE', 'Direct table/cell borders, shading and padding require explicit redesign; original source parts remain preserved.', tableAppearance.length)
-    const paragraphAppearance = Array.from(part.getElementsByTagNameNS(w, 'pPr')).filter(properties => child(properties, 'pBdr') || child(properties, 'shd'))
-    if (paragraphAppearance.length) lose('PARAGRAPH_APPEARANCE', 'Paragraph borders/shading require explicit redesign; original source parts remain preserved.', paragraphAppearance.length)
+    for (const properties of Array.from(part.getElementsByTagNameNS(w, 'trPr'))) if (child(properties, 'trHeight')) lose('SOURCE_ROW_HEIGHT', 'Fixed or minimum row height requires explicit conversion handling.')
     for (const columns of Array.from(part.getElementsByTagNameNS(w,'cols'))) if (direct(columns,'col').length || columns.getAttributeNS(w,'equalWidth') === '0') lose('UNEQUAL_COLUMN_LAYOUT','Unequal column widths require explicit redesign; equal-width print columns are preserved.')
     for (const kind of ['header','footer']) for (const reference of Array.from(part.getElementsByTagNameNS(w,kind+'Reference'))) if (reference.getAttributeNS(w,'type') && reference.getAttributeNS(w,'type')!=='default') lose('CONDITIONAL_STORY_REFERENCE','First/even-page story variants are retained only in the original; the default story is selected where available.')
     for(const kind of ['ins','del','rPrChange','pPrChange','comment']) for(const review of Array.from(part.getElementsByTagNameNS(w,kind))){const rawDate=review.getAttributeNS(w,'date');if(!rawDate||!Number.isFinite(Date.parse(rawDate)))lose('REVIEW_DATE_UNKNOWN','Missing or invalid imported review timestamps use an explicit epoch sentinel; the original remains retained and the actual timestamp is unknown.')}
@@ -114,10 +114,6 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
         if (!id || seen.has(id)) lose('SOURCE_REVISION_IDENTIFIER', 'Source property-revision identifiers are missing or duplicated within a Word part. Distinct converted records receive new canonical identities; original identifiers remain preserved and are not claimed to survive exactly.')
         if (id) seen.add(id)
       }
-    }
-    for (const properties of Array.from(part.getElementsByTagNameNS(w, 'tblPr'))) {
-      const alignment = val(child(properties, 'jc'))
-      if (alignment && alignment !== 'left') lose('SOURCE_TABLE_ALIGNMENT', 'Source table alignment is not represented independently by the supported canonical table model; conversion uses its left-aligned table and retains original properties.')
     }
     for (const charset of Array.from(part.getElementsByTagNameNS(w, 'charset'))) if (charset.hasAttributeNS(w, 'characterSet')) lose('SOURCE_FONT_CHARSET_ATTRIBUTE', 'Source font charset metadata is not represented by the Unicode canonical model; the original attribute remains preserved.')
     for (const alignment of Array.from(part.getElementsByTagNameNS(w, 'lvlJc'))) if (['start','end'].includes(val(alignment) ?? '')) lose('SOURCE_LIST_LEVEL_ALIGNMENT', 'Source logical list-level alignment is not retained as a separate numbering definition; original numbering XML remains preserved.')
@@ -233,8 +229,10 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     if (spacing) {
       const line = val(spacing, 'line')
       if (line) {
-        if ((val(spacing, 'lineRule') ?? 'auto') === 'auto') style.lineSpacing = number(line) / 240
-        else lose('EXACT_LINE_SPACING', 'Exact/minimum line heights become normal line spacing.')
+        const rule = val(spacing, 'lineRule') ?? 'auto'
+        if (rule === 'auto') style.lineSpacing = number(line) / 240
+        else if (rule === 'exact' || rule === 'atLeast') { style.lineRule = rule; style.lineSpacing = number(line) / 15 }
+        else lose('SOURCE_LINE_RULE', 'Unknown line-height rule requires explicit conversion handling.')
       }
       for (const key of ['before', 'after'] as const) {
         const value = val(spacing, key)
@@ -245,6 +243,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     if (indent) {
       const left = val(indent, 'left') ?? val(indent, 'start')
       if (left !== null) style.indent = number(left) / 15
+      const right = val(indent, 'right') ?? val(indent, 'end'); if (right !== null) style.rightIndent = number(right) / 15
       const first = val(indent, 'firstLine')
       const hanging = val(indent, 'hanging')
       if (first !== null || hanging !== null)
@@ -254,6 +253,9 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
       const value = enabled(node, key === 'keepWithNext' ? 'keepNext' : key)
       if (value !== undefined) style[key] = value
     }
+    for (const [key, name] of [['keepTogether', 'keepLines'], ['widowControl', 'widowControl']] as const) { const value = enabled(node, name); if (value !== undefined) style[key] = value }
+    const borders = readBorders(child(node, 'pBdr'), lose); if (borders) style.borders = borders
+    const shading = readShading(child(node, 'shd'), lose); if (shading) style.shading = shading
     const num = child(node, 'numPr')
     if (num) {
       const id = val(child(num, 'numId'))
@@ -607,7 +609,8 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     }
   }
   const sectionEnds: Array<{end: number; element: Element | undefined}> = []
-  const parseBlocks = (container: Element, part = 'word/document.xml'): DocumentBlock[] => {
+  const parseBlocks = (container: Element, part = 'word/document.xml', depth = 0): DocumentBlock[] => {
+    if (depth > 8) throw new WordCodecError('DOCUMENT_NESTING_LIMIT', 'Nested tables exceed eight levels.', 413)
     const result: DocumentBlock[] = []
     for (const node of Array.from(container.childNodes)) {
       if (node.nodeType !== 1) continue
@@ -623,9 +626,13 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
       } else if (element.localName === 'tbl') {
         const rows = direct(element, 'tr').map((row) => ({
           id: randomUUID(),
+          keepTogether: enabled(child(row, 'trPr') ?? row, 'cantSplit'),
+          repeatHeader: enabled(child(row, 'trPr') ?? row, 'tblHeader'),
           cells: direct(row, 'tc').map((cell) => ({
             id: randomUUID(),
-            paragraphs: direct(cell, 'p').map((value) => paragraph(value,part)),
+            paragraphs: [],
+            blocks: parseBlocks(cell, part, depth + 1),
+            presentation: readCellPresentation(child(cell, 'tcPr'), lose),
           })),
         }))
         if (!rows.length) continue
@@ -659,17 +666,17 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
           )
         for (const row of rows)
           for (const cell of row.cells)
-            if (!cell.paragraphs.length)
-              cell.paragraphs.push({
+            if (!cell.blocks.length)
+              cell.blocks.push({
                 type: 'paragraph',
                 id: randomUUID(),
                 style: {},
                 runs: [{ id: randomUUID(), text: '', style: {} }],
               })
-        result.push({ type: 'table', id: randomUUID(), widths, rows })
+        result.push({ type: 'table', id: randomUUID(), widths, rows, presentation: readTablePresentation(child(element, 'tblPr'), lose) })
       } else if (element.localName === 'sdt') {
         const content = child(element, 'sdtContent')
-        if (content) result.push(...parseBlocks(content,part))
+        if (content) result.push(...parseBlocks(content,part,depth + 1))
       }
     }
     return result
@@ -684,6 +691,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     const size = child(section, 'pgSz')
     if (size) { layout.width = number(size.getAttributeNS(w, 'w'), 11910) / 15; layout.height = number(size.getAttributeNS(w, 'h'), 16845) / 15 }
     const margin = child(section, 'pgMar'); if (margin) layout.margins = ['top','right','bottom','left'].map((key) => number(margin.getAttributeNS(w, key), 1140) / 15) as DocumentLayout['margins']
+    if (margin) { layout.headerDistance = number(margin.getAttributeNS(w, 'header'), 360) / 15; layout.footerDistance = number(margin.getAttributeNS(w, 'footer'), 360) / 15; layout.gutter = number(margin.getAttributeNS(w, 'gutter'), 0) / 15 }
     const relations = relationships('word/document.xml')
     for (const story of ['header','footer'] as const) {
       const refs = direct(section, `${story}Reference`); const ref = refs.find((reference)=>reference.getAttributeNS(w,'type')==='default') ?? refs[0]; const target = ref ? relations.get(ref.getAttributeNS(r, 'id')!) : undefined
@@ -699,7 +707,10 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
   const sections: DocxSection[] = []; let sectionStart = 0
   for (const entry of sectionEnds) {
     const {layout,stories} = readSectionLayout(entry.element)
-    if (entry.end > sectionStart || !sections.length) sections.push({ start: sectionStart, end: entry.end, document: { ...document, blocks: document.blocks.slice(sectionStart, entry.end), layout },stories })
+    const rawBreak = entry.element ? val(child(entry.element, 'type')) ?? 'nextPage' : 'nextPage'
+    const breakAfter = rawBreak === 'continuous' ? 'continuous' : 'nextPage'
+    if (rawBreak !== 'continuous' && rawBreak !== 'nextPage') lose('SOURCE_SECTION_BREAK', 'Odd/even-page and column section breaks require explicit conversion handling.')
+    if (entry.end > sectionStart || !sections.length) sections.push({ start: sectionStart, end: entry.end, breakAfter, document: { ...document, blocks: document.blocks.slice(sectionStart, entry.end), layout },stories })
     sectionStart = entry.end
   }
   document.layout = sections[0]?.document.layout ?? baseLayout
@@ -731,7 +742,7 @@ export async function importDocx(bytes: Buffer): Promise<DocxConversion> {
     }
   }
   const bindBoundaries=(items:DocumentBlock[])=>{for(let index=0;index<items.length;index++){const block=items[index];const mark=boundaryMarkers.get(block.id);if(!mark)continue;if(block.type!=='paragraph'||items[index+1]?.type!=='paragraph')throw new WordCodecError('DOCUMENT_IMPORT_BOUNDARY_UNSUPPORTED','A revised paragraph mark has no adjacent supported paragraph in its container.',422);const right=items[index+1] as DocumentParagraph;const id=randomUUID();block.boundaryChangeId=id;document.changes.push({id,kind:mark.kind,authorId:0,authorName:'Imported author',importedAuthor:mark.element.getAttributeNS(w,'author')??'Unknown imported author',createdAt:date(mark.element.getAttributeNS(w,'date')),status:'pending',origin:'import',targetRunIds:[],targetBlockIds:[block.id,right.id]});boundaryMarkers.delete(block.id)}}
-  bindBoundaries(document.blocks);for(const section of sections)for(const story of Object.values(section.stories??{})){bindBoundaries(story.blocks);for(const block of story.blocks)if(block.type==='table')for(const row of block.rows)for(const cell of row.cells)bindBoundaries(cell.paragraphs)}for(const block of document.blocks)if(block.type==='table')for(const row of block.rows)for(const cell of row.cells)bindBoundaries(cell.paragraphs)
+  bindBoundaries(document.blocks);for(const section of sections)for(const story of Object.values(section.stories??{})){bindBoundaries(story.blocks);for(const block of allBlocks(story.blocks))if(block.type==='table')for(const row of block.rows)for(const cell of row.cells)bindBoundaries(cellBlocks(cell))}for(const block of allBlocks(document.blocks))if(block.type==='table')for(const row of block.rows)for(const cell of row.cells)bindBoundaries(cellBlocks(cell))
   if(boundaryMarkers.size)throw new WordCodecError('DOCUMENT_IMPORT_BOUNDARY_UNSUPPORTED','Revised paragraph marks in unconverted containers cannot be safely imported.',422)
   const retainReview = (item: WordDocument) => {
     const paragraphs = paragraphsOf(item, true); const blocks = new Set(paragraphs.map((block) => block.id)); const runs = new Set(paragraphs.flatMap((block) => block.runs.map((run) => run.id)))

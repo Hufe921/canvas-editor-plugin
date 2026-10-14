@@ -17,6 +17,12 @@ export interface ParagraphStyle {
   name?: string;
   alignment?: 'left' | 'center' | 'right' | 'justify';
   lineSpacing?: number;
+  lineRule?: 'auto' | 'exact' | 'atLeast';
+  rightIndent?: number;
+  keepTogether?: boolean;
+  widowControl?: boolean;
+  shading?: string;
+  borders?: WordBorders;
   before?: number;
   after?: number;
   indent?: number;
@@ -26,6 +32,11 @@ export interface ParagraphStyle {
   heading?: 1 | 2 | 3 | 4 | 5 | 6;
   list?: 'bullet' | 'number';
 }
+export interface WordBorder { style: 'none' | 'single' | 'double' | 'dashed' | 'dotted'; color: string; width: number; space: number }
+export interface WordBorders { top?: WordBorder; right?: WordBorder; bottom?: WordBorder; left?: WordBorder; insideHorizontal?: WordBorder; insideVertical?: WordBorder }
+export interface TablePresentation { alignment?: 'left' | 'center' | 'right'; indent?: number; layout?: 'fixed' | 'auto'; width?: { type: 'auto' | 'percent' | 'absolute'; value: number }; borders?: WordBorders; shading?: string; margins?: [number, number, number, number] }
+export interface CellPresentation { borders?: WordBorders; shading?: string; margins?: [number, number, number, number]; verticalAlignment?: 'top' | 'center' | 'bottom' }
+export interface DocumentCell { id: string; paragraphs: DocumentParagraph[]; blocks?: DocumentBlock[]; presentation?: CellPresentation }
 export interface DocumentRun {
   id: string;
   text: string;
@@ -55,7 +66,8 @@ export interface DocumentTable {
   type: 'table';
   id: string;
   widths: number[];
-  rows: Array<{ id: string; cells: Array<{ id: string; paragraphs: DocumentParagraph[] }> }>;
+  presentation?: TablePresentation;
+  rows: Array<{ id: string; keepTogether?: boolean; repeatHeader?: boolean; cells: DocumentCell[] }>;
 }
 export interface DocumentBreak { type: 'pageBreak'; id: string }
 export type DocumentBlock = DocumentParagraph | DocumentImage | DocumentTable | DocumentBreak;
@@ -98,6 +110,9 @@ export interface DocumentLayout {
   width: number;
   height: number;
   margins: [number, number, number, number];
+  headerDistance?: number;
+  footerDistance?: number;
+  gutter?: number;
   font: string;
   fontSize: number;
   pageNumbers: boolean;
@@ -116,9 +131,13 @@ export const defaultLayout = (): DocumentLayout => ({
   font: 'Georgia', fontSize: 16, pageNumbers: true, header: [], footer: [],
 })
 export function paragraphsOf(document: WordDocument, includeStories = false): DocumentParagraph[] {
-  const body = document.blocks.flatMap((block) => block.type === 'paragraph' ? [block]
-    : block.type === 'table' ? block.rows.flatMap((row) => row.cells.flatMap((cell) => cell.paragraphs)) : [])
+  const body = allBlocks(document.blocks).filter((block): block is DocumentParagraph => block.type === 'paragraph')
   return includeStories ? [...document.layout.header, ...body, ...document.layout.footer] : body
+}
+export function cellBlocks(cell: DocumentCell): DocumentBlock[] { return cell.blocks ?? cell.paragraphs }
+export function allBlocks(blocks: DocumentBlock[], depth = 0): DocumentBlock[] {
+  if (depth > 8) throw new Error('Nested tables exceed eight levels')
+  return blocks.flatMap(block => block.type === 'table' ? [block, ...block.rows.flatMap(row => row.cells.flatMap(cell => allBlocks(cellBlocks(cell), depth + 1)))] : [block])
 }
 export function visibleParagraph(block: DocumentParagraph, changes: DocumentChange[], view: DocumentView): boolean {
   const change = changes.find((item) => item.id === block.changeId)

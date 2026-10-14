@@ -6,7 +6,7 @@ import type { WordStories } from './stories'
 import type { WordStyleDefinitions } from './styles'
 import { WordCodecError } from './errors'
 const escapeXml=(text:string)=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
-export interface WordPackageInput {sections:Array<{title:string;startsSection?:boolean;suppressTitle?:boolean;document:WordDocument;stories?:WordStories}>;assets:Map<number,DocxAsset>;styleDefinitions?:WordStyleDefinitions}
+export interface WordPackageInput {sections:Array<{title:string;startsSection?:boolean;suppressTitle?:boolean;breakAfter?:'continuous'|'nextPage';document:WordDocument;stories?:WordStories}>;assets:Map<number,DocxAsset>;styleDefinitions?:WordStyleDefinitions}
 
 import { parseDocumentXml, validateDocxPackage } from './packageValidation'
 import { createZipBuffer, type ZipEntry } from './zipArchive'
@@ -151,16 +151,23 @@ export async function exportDocxSections(input: WordPackageInput, mode: ExportMo
       body.push(
         `<w:p><w:pPr><w:pStyle w:val="${prefix}-Heading1"/></w:pPr><w:r><w:t xml:space="preserve">${escapeXml(input.sections[sectionIndex].title)}</w:t></w:r></w:p>`,
       )
-    if (input.sections[sectionIndex + 1]?.startsSection === false) {
+    const breakAfter = input.sections[sectionIndex].breakAfter ?? (input.sections[sectionIndex + 1]?.startsSection === false ? 'continuous' : undefined)
+    if (breakAfter) {
       const type = doc.createElementNS(w, 'w:type')
-      type.setAttribute('w:val', 'continuous')
+      type.setAttribute('w:val', breakAfter)
       const size = section.getElementsByTagNameNS(w, 'pgSz').item(0)
       section.insertBefore(type, size)
     }
-    for (let child = sourceBody.firstChild; child; child = child.nextSibling)
-      if (child.nodeType === 1 && child !== section) body.push(serialize(child as Element))
+    const children = Array.from(sourceBody.childNodes).filter((node): node is Element => node.nodeType === 1 && node !== section)
+    const last = children.at(-1)
+    if (sectionIndex !== input.sections.length - 1 && last?.namespaceURI === w && last.localName === 'p') {
+      let properties = Array.from(last.childNodes).find((node): node is Element => node.nodeType === 1 && 'namespaceURI' in node && node.namespaceURI === w && 'localName' in node && node.localName === 'pPr')
+      if (!properties) { properties = doc.createElementNS(w, 'w:pPr'); last.insertBefore(properties, last.firstChild) }
+      properties.appendChild(section)
+    }
+    for (const child of children) body.push(serialize(child))
     if (sectionIndex === input.sections.length - 1) body.push(serialize(section))
-    else body.push(`<w:p><w:pPr>${serialize(section)}</w:pPr></w:p>`)
+    else if (last?.namespaceURI !== w || last.localName !== 'p') body.push(`<w:p><w:pPr>${serialize(section)}</w:pPr></w:p>`)
     const sourceTypes = parseDocumentXml(source.get('[Content_Types].xml')!).getElementsByTagNameNS(
       ct,
       'Override',
